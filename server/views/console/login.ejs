@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include partials/head %>
+    <title>Please Login</title>
+</head>
+<body>
+
+    <div class="container">
+        <div class="col-md-6 col-md-offset-3">
+        <form class="form-signin" action="/console/login" method="POST">
+            <h2 class="form-signin-heading">Please sign in</h2>
+            <label for="inputUser" class="sr-only">User</label>
+            <input name="username" type="text" id="inputUser" class="form-control" placeholder="User" required autofocus>
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input name="password" type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+            <!-- <div class="checkbox">
+                <label>
+                    <input type="checkbox" value="remember-me"> Remember me
+                </label>
+            </div> -->
+            <br/>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+        </form>
+        </div>
+    </div> <!-- /container -->
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="/client/js/ie10-viewport-bug-workaround.js"></script>
+
+    <footer>
+        <% include partials/footer %>
+    </footer>
+    
+</body>
+</html>
