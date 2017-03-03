@@ -5,7 +5,7 @@ var express = require('express');
 var _ = require('lodash');
 var uuid = require('node-uuid');
 var path = require('path');
-var service = require('../services/service');
+// var service = require('../services/service');
 // var fs = require('fs');
 // var uaparser = require('ua-parser-js');
 // var compiled_app_module_path = path.resolve(__dirname, '../../', 'public', 'assets', 'server.js');
@@ -84,8 +84,8 @@ module.exports = function(app, passport) {
 
   // process the login form
   app.post('/login', passport.authenticate('local-login', {
-      successRedirect : '/console/', // redirect to the secure profile section
-      failureRedirect : '/console/login', // redirect back to the signup page if there is an error
+      successRedirect : '/', // redirect to the secure profile section
+      failureRedirect : '/login', // redirect back to the signup page if there is an error
       failureFlash : false // allow flash messages
   }));
 
