@@ -44,7 +44,7 @@
     production : {
       key  : "YourPrivateKeyPath",
       user : "ubuntu",
-      host : "52.220.149.125",
+      host : "52.77.119.251",
       ref  : "origin/master",
       repo : "https://github.com/FablabTaipei/FabDoc-console.git",
       path : "~/project/fabdoc-console",
