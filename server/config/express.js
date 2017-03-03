@@ -37,6 +37,13 @@ module.exports = function (app, passport) {
     //   resave: false,
     //   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
     // }));
+
+    // temprorary did it like this, because we dont have DB yet.
+    app.use(session({
+      secret: 'fabdocconsole',
+      resave: false,
+      cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
+    })); // session secret  
   }else{
     app.use(session({ secret: 'ilovescotchscotchyscotchscotch' })); // session secret  
   }
