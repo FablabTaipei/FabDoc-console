@@ -3,6 +3,8 @@
 // load all the things we need
 var LocalStrategy   = require('passport-local').Strategy;
 
+var utils = require('./utils');
+
 var users = {
   account: {
     username: 'account',
