@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include partials/head %>
+    <script type="text/javascript" src="/client/js/socket.io.js"></script>
+</head>
+<body class="container">
+
+    <header>
+        <% include partials/header %>
+    </header>
+
+    <main>
+        <button class="btn btn-default" onclick="preCommitBtnClick(this);">Start Pre-Commit</button>
+        <div class="well">
+            <p>Token: <span class="token"></span></p>
+            <p>Status: <span class="status"></span></p>
+        </div>
+        <div class="row"></div>
+    </main>
+
+    <footer>
+        <% include partials/footer %>
+    </footer>
+    
+    <script type="text/javascript">
+        function preCommitBtnClick(o){
+            $(o).prop("disabled", true);
+
+            socketInstance = io.connect();
+            socketInstance.on('connect', function(msg){
+                console.log("Browser Connected.");
+            });
+            socketInstance.on('pass_token', function(data){
+                $(".well span.token").text(data.token);
+            });
+            socketInstance.on('pass_compressed_image', function(data){
+                // data.base64
+                // data.type
+                // data:image/png;base64,xxxx
+                $(".row").append('<div class="col-md-4">' + '<img style="width: 100%;" src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</div>');
+            }); 
+        }
+        
+    </script>
+</body>
+</html>
