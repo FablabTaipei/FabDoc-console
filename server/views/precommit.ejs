@@ -36,10 +36,19 @@
     <script type="text/javascript">
         var options = {
             horizontal: 1,
-            itemNav: 'basic',
+            itemNav: 'centered',
             speed: 300,
+            smart: 1,
             mouseDragging: 1,
-            touchDragging: 1
+            touchDragging: 1,
+            activateOn: 'click',
+            activateMiddle: 1,
+            scrollBar: '.scrollbar',
+            dragHandle: 1,
+            dynamicHandle: 1,
+            minHandleSize: 70,
+            clickBar: 1,
+            elasticBounds: 1
         };
         var frame = new Sly('.frame', options).init();
         function preCommitBtnClick(o){
@@ -60,7 +69,9 @@
                 // data.base64
                 // data.type
                 // data:image/png;base64,xxxx
-                $(".slidee").append('<li>' + '<img style="height: 100%;" src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>');
+                // $(".slidee").append('<li>' + '<img src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>');
+                var image = '<li>' + '<img weight="100%" src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>'
+                frame.add(image);
             });
         }
 
