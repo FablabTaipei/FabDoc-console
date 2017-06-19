@@ -19,6 +19,7 @@
             <p>Status: <span class="status"></span></p>
         </div>
         <div class="row"></div>
+        <div class="img-view"><img class="editor"/></div>
         <div class="frame">
             <ul class="slidee">
             </ul>
@@ -41,16 +42,32 @@
             smart: 1,
             mouseDragging: 1,
             touchDragging: 1,
+            releaseSwing: 1,
             activateOn: 'click',
             activateMiddle: 1,
             scrollBar: '.scrollbar',
             dragHandle: 1,
             dynamicHandle: 1,
             minHandleSize: 70,
+            scrollBy: 10,
             clickBar: 1,
             elasticBounds: 1
         };
-        var frame = new Sly('.frame', options).init();
+
+        var frame = new Sly('.frame', options)
+
+        frame.on('active', function(e,i) {
+            var id = '#item-' + i;
+            var newSrc = $(id).attr('src');
+            $(".editor").attr('src', newSrc);
+        });
+
+        frame.init();
+
+        $(window).resize(function(e) {
+            $('.frame').sly('reload');
+        });
+
         function preCommitBtnClick(o){
             $(o).prop("disabled", true);
 
@@ -66,12 +83,9 @@
                   });
             });
             socketInstance.on('pass_compressed_image', function(data){
-                // data.base64
-                // data.type
-                // data:image/png;base64,xxxx
-                // $(".slidee").append('<li>' + '<img src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>');
-                var image = '<li>' + '<img weight="100%" src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>'
+                var image = '<li>' + '<img id="item-' + frame.items.length + '" weight="100%" src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>'
                 frame.add(image);
+                frame.activate(frame.items.length - 1);
             });
         }
 
