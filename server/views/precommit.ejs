@@ -57,9 +57,10 @@
         var frame = new Sly('.frame', options)
 
         frame.on('active', function(e,i) {
-            var id = '#item-' + i;
-            var newSrc = $(id).attr('src');
-            $(".editor").attr('src', newSrc);
+            var activeEl = $('#item-' + i);
+            $(".editor")
+                .attr('src', activeEl.attr('src') )
+                .attr('path', activeEl.attr('path') );
         });
 
         frame.init();
@@ -83,7 +84,7 @@
                   });
             });
             socketInstance.on('pass_compressed_image', function(data){
-                var image = '<li>' + '<img id="item-' + frame.items.length + '" weight="100%" src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>'
+                var image = '<li>' + '<img id="item-' + frame.items.length + '" weight="100%" src="data:' + data.type + ';base64,' + data.base64 + '" path="' + data.filepath + '"/>' + '</li>'
                 frame.add(image);
                 frame.activate(frame.items.length - 1);
             });
