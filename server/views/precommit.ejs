@@ -5,6 +5,7 @@
     <script type="text/javascript" src="/client/js/socket.io.js"></script>
     <script type="text/javascript" src="/client/js/qrcode.min.js"></script>
     <script type="text/javascript" src="/client/js/sly.min.js"></script>
+    <script type="text/javascript" src="/client/js/jquery.areaSelect.js"></script>
 </head>
 <body class="container">
 
@@ -19,7 +20,7 @@
             <p>Status: <span class="status"></span></p>
         </div>
         <div class="row"></div>
-        <div class="img-view"><img class="editor"/></div>
+        <div class="img-view"><img width=800 height=600 class="editor"/></div>
         <div class="frame">
             <ul class="slidee">
             </ul>
@@ -35,7 +36,20 @@
     </footer>
 
     <script type="text/javascript">
-        var options = {
+        var tag_editor_options = {
+            initAreas: [{"width": 800, "height": 600}],
+            deleteMethod: 'click',
+            area: {strokeStyle: 'Aqua', lineWidth: 1.5},
+            point: {size: 3, fillStyle: 'black'},
+        };
+
+        $('.editor').areaSelect(tag_editor_options);
+
+        $('.editor').areaSelect('bindChangeEvent', function (event, data){
+            console.log(data.areas);
+        });
+
+        var frame_options = {
             horizontal: 1,
             itemNav: 'centered',
             speed: 300,
@@ -54,9 +68,10 @@
             elasticBounds: 1
         };
 
-        var frame = new Sly('.frame', options)
+        var frame = new Sly('.frame', frame_options)
 
         frame.on('active', function(e,i) {
+            // Show clicked activated image into preview editor
             var activeEl = $('#item-' + i);
             $(".editor")
                 .attr('src', activeEl.attr('src') )
@@ -84,7 +99,7 @@
                   });
             });
             socketInstance.on('pass_compressed_image', function(data){
-                var image = '<li>' + '<img id="item-' + frame.items.length + '" weight="100%" src="data:' + data.type + ';base64,' + data.base64 + '" path="' + data.filepath + '"/>' + '</li>'
+                var image = '<li>' + '<img id="item-' + frame.items.length + '" height="100%" src="data:' + data.type + ';base64,' + data.base64 + '" path="' + data.filepath + '"/>' + '</li>';
                 frame.add(image);
                 frame.activate(frame.items.length - 1);
             });
