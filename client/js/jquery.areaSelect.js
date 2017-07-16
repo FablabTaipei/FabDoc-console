@@ -5,8 +5,6 @@
  */
 (function ($, undefined) {
 
-	console.log('jquery.areaSelect.js by Gongshw https://github.com/gongshw/jquery.areaSelect.js');
-
 	var AreaSelectStatus = {CREATE: 'create', MOVE: 'move', RESIZE: 'resize', NEAR: 'near'};
 	var Direction = {
 		NE: {name: 'NE', x: 1, y: -1, cursor: 'nesw-resize'},
@@ -317,4 +315,3 @@
 	}
 
 })(jQuery);
-

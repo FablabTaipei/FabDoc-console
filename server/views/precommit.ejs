@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <% include partials/head %>
-    <script type="text/javascript" src="/client/js/socket.io.js"></script>
-    <script type="text/javascript" src="/client/js/qrcode.min.js"></script>
-    <script type="text/javascript" src="/client/js/sly.min.js"></script>
-    <script type="text/javascript" src="/client/js/jquery.areaSelect.js"></script>
+        <script type="text/javascript" src="/client/js/socket.io.js"></script>
+        <script type="text/javascript" src="/client/js/qrcode.min.js"></script>
+        <script type="text/javascript" src="/client/js/sly.min.js"></script>
+        <script type="text/javascript" src="/client/js/jquery.areaSelect.js"></script>
 </head>
+
 <body class="container">
 
     <header>
@@ -19,14 +21,75 @@
             <p>Token: <span class="token"></span><canvas id="canvas"></canvas></p>
             <p>Status: <span class="status"></span></p>
         </div>
-        <div class="row"></div>
-        <div class="img-view"><img width=800 height=600 class="editor"/></div>
-        <div class="frame">
-            <ul class="slidee">
-            </ul>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="img-view"><img width=100% height=600px class="editor" src="" /></div>
+                <div class="frame">
+                    <ul class="slidee">
+                    </ul>
+                </div>
+                <div class="scrollbar">
+                    <div class="handle"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <form>
+                    <h5><strong>Commit</strong></h5>
+                    <div class="form-group" style="margin-bottom: 40px;">
+                        <label for="inputCommit" class="sr-only">Commit</label>
+                        <input type="text" class="form-control" id="inputCommit">
+                    </div>
+                    <h5><strong>Components</strong></h5>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-xs-4">
+                                <label for="inputAmount" class="sr-only">Amount</label>
+                                <input type="number" class="form-control text-center" id="inputAmount" placeholder="quantity"/>
+                            </div>
+                            <div class="col-xs-1">
+                                <p class="form-control-static text-center"> x </p>
+                            </div>
+                            <div class="col-xs-7">
+                                <label for="inputComponents" class="sr-only">Components</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="inputComponents" placeholder="name"/>
+                                    <span class="input-group-btn">
+                                        <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h5><strong>Machines</strong></h5>
+                    <div class="form-group has-feedback">
+                        <label for="inputMachines" class="sr-only">Machines</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="inputMachines" />
+                            <span class="input-group-btn">
+                                <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                            </span>
+                        </div>
+                    </div>
+                    <h5><strong>Repository</strong></h5>
+                    <div class="form-group has-feedback" style="margin-bottom: 65px;">
+                        <label for="inputRepository" class="sr-only">Repository</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-folder-open"></span></span>
+                            <input type="text" class="form-control" id="inputRepository" />
+                            <span class="input-group-btn">
+                                <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                            </span>
+                        </div>
+                    </div>
+                    <h5><strong>Note</strong></h5>
+                    <div class="form-group">
+                        <label for="inputNote" class="sr-only">Note</label>
+                        <textarea class="form-control" id="inputNote"></textarea>
+                    </div>
+                </form>
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
         </div>
-        <div class="scrollbar">
-            <div class="handle"></div>
         </div>
 
     </main>
@@ -37,15 +100,25 @@
 
     <script type="text/javascript">
         var tag_editor_options = {
-            initAreas: [{"width": 800, "height": 600}],
+            initAreas: [{
+                "width": 800,
+                "height": 600
+            }],
             deleteMethod: 'click',
-            area: {strokeStyle: 'Aqua', lineWidth: 1.5},
-            point: {size: 3, fillStyle: 'black'},
+            area: {
+                strokeStyle: 'Aqua',
+                lineWidth: 1.5
+            },
+            point: {
+                size: 3,
+                fillStyle: 'black'
+            },
         };
 
+        // Setup a canvas to tag materials on pre-commit pictures
         $('.editor').areaSelect(tag_editor_options);
 
-        $('.editor').areaSelect('bindChangeEvent', function (event, data){
+        $('.editor').areaSelect('bindChangeEvent', function(event, data) {
             console.log(data.areas);
         });
 
@@ -70,7 +143,7 @@
 
         var frame = new Sly('.frame', frame_options)
 
-        frame.on('active', function(e,i) {
+        frame.on('active', function(e, i) {
             // Show clicked activated image into preview editor
             var id = '#item-' + i;
             var newSrc = $(id).attr('src');
@@ -83,27 +156,27 @@
             $('.frame').sly('reload');
         });
 
-        function preCommitBtnClick(o){
+        function preCommitBtnClick(o) {
             $(o).prop("disabled", true);
 
             socketInstance = io.connect();
-            socketInstance.on('connect', function(msg){
+            socketInstance.on('connect', function(msg) {
                 console.log("Browser Connected.");
             });
-            socketInstance.on('pass_token', function(data){
+            socketInstance.on('pass_token', function(data) {
                 $(".well span.token").text(data.token);
-                qrcodelib.toCanvas(document.getElementById('canvas'), data.token, function (error) {
+                qrcodelib.toCanvas(document.getElementById('canvas'), data.token, function(error) {
                     if (error) console.error(error)
                     console.log('success!');
-                  });
+                });
             });
-            socketInstance.on('pass_compressed_image', function(data){
+            socketInstance.on('pass_compressed_image', function(data) {
                 var image = '<li>' + '<img id="item-' + frame.items.length + '" height="100%" src="data:' + data.type + ';base64,' + data.base64 + '"/>' + '</li>'
                 frame.add(image);
                 frame.activate(frame.items.length - 1);
             });
         }
-
     </script>
 </body>
+
 </html>

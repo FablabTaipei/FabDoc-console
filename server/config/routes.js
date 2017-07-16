@@ -20,7 +20,7 @@ function checkAndUpdateCookie(req, res){
 
     utils.setCookie(res, updateCookieValue, 1000 * 60 * 60 * 3); // 3 hrs
 
-    // return hasExist;   
+    // return hasExist;
 }
 
 // route middleware to make sure a user is logged in
@@ -30,21 +30,21 @@ function isLoggedIn(req, res, next) {
         checkAndUpdateCookie(req, res);
         return next();
     }
-    // if user is authenticated in the session, carry on 
+    // if user is authenticated in the session, carry on
     // if(process.env.NODE_ENV === 'development' || req.isAuthenticated()) return toNext();
     if(req.isAuthenticated()) return toNext();
-    
+
     console.log("return to login");
     // if they aren't redirect them to the home page
     res.redirect('/login');
-} 
+}
 
 module.exports = function(app, passport) {
 
     // =====================================
     // Normal Files ========================
     // =====================================
-    app.get('/client/:type(css|js|images)/:name', function(req, res, next) {
+    app.get('/client/:type(css|js|images|fonts)/:name', function(req, res, next) {
         var type = req.params.type;
         var name = req.params.name;
         res.sendFile(path.resolve(__dirname, '../../client', type, name));
