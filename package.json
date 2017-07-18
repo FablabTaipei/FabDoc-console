@@ -17,6 +17,7 @@
     "node": "6.x"
   },
   "dependencies": {
+    "@google-cloud/storage": "^1.2.0",
     "autoprefixer": "^6.3.3",
     "axios": "^0.9.1",
     "bcrypt-nodejs": "0.0.3",
