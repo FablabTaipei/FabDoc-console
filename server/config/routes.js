@@ -5,7 +5,7 @@ var express = require('express');
 var _ = require('lodash');
 var uuid = require('node-uuid');
 var path = require('path');
-var utils = require('./utils');
+var utils = require('../utils');
 // var service = require('../services/service');
 // var fs = require('fs');
 // var uaparser = require('ua-parser-js');
@@ -80,6 +80,15 @@ module.exports = function(app, passport) {
 
     app.get('/precommit', isLoggedIn, function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
+        // req.session.project = 1;
+    });
+
+    app.post('/addcommit', isLoggedIn, function(req, res, next){
+        var user = req.user;
+        var project = req.session.project;
+        if(project && user){
+            // ...
+        }
     });
 
     // app.get('/console/:type(question|gift|player)', isLoggedIn, function(req, res, next){
