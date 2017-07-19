@@ -21,14 +21,14 @@
             <p>Token: <span class="token"></span><canvas id="canvas"></canvas></p>
             <p>Status: <span class="status"></span></p>
         </div>
-        <div class="col-xs-12 btn-push">
+        <div class="col-xs-12 btn-push" v-cloak>
             <button class="btn btn-success pull-right" type="button">
-                    Push <span class="badge">4</span>
+                Push <span class="badge"> {{ commitQueue }} </span>
                 </button>
         </div>
         <div class="row">
             <div class="col-md-8">
-                <div class="img-view"><img id="editor" src="" /></div>
+                <div class="img-view"><img id="editor" src="" path="" /></div>
                 <div class="frame">
                     <ul class="slidee">
                     </ul>
@@ -64,6 +64,22 @@
                                 </div>
                             </div>
                         </div>
+                        <ul class="component-list" v-cloak>
+                            <li v-for="component in components" class="component" :key="component.id" :class="{ editing: component == editedComp }">
+                                <div class="col-xs-4">
+                                    <label @dbclick="editComp(component)">{{ component.amount }}</label>
+                                    <input class="form-control edit" type="number" v-model="component.amount" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
+                                </div>
+                                <div class="col-xs-1">
+                                    <p class="form-control-static text-center"> x </p>
+                                </div>
+                                <div class="col-xs-7">
+                                    <label class="text-center" @dbclick="editComp(component)">{{ component.name }}</label>
+                                    <input class="form-control edit" type="text" v-model="component.name" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
+                                    <button class="remove" @click="removeComp(component)"></button>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
                     <h5><strong>Machines</strong></h5>
                     <div class="form-group has-feedback">
@@ -74,6 +90,13 @@
                                 <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
                             </span>
                         </div>
+                        <ul class="machine-list" v-cloak>
+                            <li v-for="machine in machines" class="machine" :key="machine.id" :class="{ editing: machine == editedMachine }">
+                                <label @dbclick="editMachine(machine)">{{ machine.name }}</label>
+                                <input class="form-control edit" type="text" v-model="machine.name" v-machine-focus=" machine == editedMachine" @blur="doneEdit(machine)" @keyup.enter="doneEdit(machine)" @keyup.esc="cancelEdit(machine)" />
+                                <button class="remove" @click="removeMachine(machine)"></button>
+                            </li>
+                        </ul>
                     </div>
                     <h5><strong>Repository</strong></h5>
                     <div class="form-group has-feedback form-repo">
@@ -85,6 +108,13 @@
                                 <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
                             </span>
                         </div>
+                        <ul class="repo-list" v-cloak>
+                            <li v-for="repo in repos" class="repo" :key="repo.id" :class="{ editing: repo == editedRepo }">
+                                <label @dbclick="editRepo(repo)">{{ repo.name }}</label>
+                                <input class="form-control edit" type="text" v-model="repo.name" v-repo-focus=" repo == editedRepo" @blur="doneEdit(repo)" @keyup.enter="doneEdit(repo)" @keyup.esc="cancelEdit(repo)" />
+                                <button class="remove" @click="removeRepo(repo)"></button>
+                            </li>
+                        </ul>
                     </div>
                     <h5><strong>Note</strong></h5>
                     <div class="form-group form-note">
@@ -152,9 +182,9 @@
         frame.on('active', function(e, i) {
             // Show clicked activated image into preview editor
             var activeEl = $('#item-' + i);
-            $(".editor")
-                .attr('src', activeEl.attr('src') )
-                .attr('path', activeEl.attr('path') );
+            $("#editor")
+                .attr('src', activeEl.attr('src'))
+                .attr('path', activeEl.attr('path'));
         });
 
         frame.init();
@@ -177,8 +207,11 @@
                     console.log('success!');
                 });
             });
-            socketInstance.on('pass_compressed_image', function(data){
-                var image = '<li>' + '<img id="item-' + frame.items.length + '" height="100%" src="data:' + data.type + ';base64,' + data.base64 + '" path="' + data.filepath + '"/>' + '</li>';
+            socketInstance.on('pass_compressed_image', function(data) {
+                var image = '<li>' + '<input type="checkbox" id="pr' +
+                    frame.items.length + '" /><label for="pr' + frame.items.length + '" class="img-label"><img id="item-' +
+                    frame.items.length + '" src="data:' + data.type + ';base64,' +
+                    data.base64 + '" path="' + data.filepath + '"/></label>' + '</li>';
                 frame.add(image);
                 frame.activate(frame.items.length - 1);
             });

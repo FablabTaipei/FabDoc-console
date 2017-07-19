@@ -1,8 +1,10 @@
 body {
-    padding-top: 40px;
+    padding-top: 0px;
     padding-bottom: 40px;
     background-color: #FAF9F9;
 }
+
+[v-cloak] {display: none}
 
 .form-signin {
     max-width: 330px;
@@ -42,6 +44,19 @@ body {
     margin-bottom: 10px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+}
+
+.form-name {
+    margin-top: 50px;
+    margin-bottom: 10px;
+}
+
+.form-description {
+    margin-bottom: 25px;
+}
+
+.form-license {
+    margin-bottom: 65px;
 }
 
 .modal textarea {
@@ -136,7 +151,7 @@ body {
 }
 
 .img-label {
-    height: 95%;
+    height: 92%;
     border: 1px solid #fff;
     display: block;
     position: relative;
