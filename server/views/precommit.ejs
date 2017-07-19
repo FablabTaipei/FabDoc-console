@@ -152,7 +152,7 @@
         frame.on('active', function(e, i) {
             // Show clicked activated image into preview editor
             var activeEl = $('#item-' + i);
-            $(".editor")
+            $("#editor")
                 .attr('src', activeEl.attr('src') )
                 .attr('path', activeEl.attr('path') );
         });
