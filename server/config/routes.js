@@ -6,6 +6,7 @@ var _ = require('lodash');
 var uuid = require('node-uuid');
 var path = require('path');
 var utils = require('../utils');
+var interface = require('../services/data-interface');
 // var service = require('../services/service');
 // var fs = require('fs');
 // var uaparser = require('ua-parser-js');
@@ -89,6 +90,34 @@ module.exports = function(app, passport) {
         if(project && user){
             // ...
         }
+    });
+
+    // =====================================
+    // TEST FIREBASE =======================
+    // =====================================
+    app.get('/testpush', isLoggedIn, function (req, res, next) {
+        req.session.project = 1;
+        res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'));
+    });
+    app.post('/testpush', isLoggedIn, function (req, res, next) {
+        var projectId = req.session.project;
+        var userId = req.user;
+        var formbody = req.body;
+
+        interface.addCommit({
+            project_id: projectId,
+            user_id: userId,
+            message: formbody.message,
+            components: JSON.stringify( [{ name: "hook", quantity: 2, point:[23, 25, 100, 200] }, { name: "hamer", quantity: 1, point:[66, 45, 150, 40] }] ),
+            machines: JSON.stringify(['shit','damn']),
+            repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
+            note: "this is a test"
+        }).then(function(){
+            res.status(200).send("OK");
+        }, function(){
+            res.status(500).json({error: "Internal server error"});
+        });
+
     });
 
     // app.get('/console/:type(question|gift|player)', isLoggedIn, function(req, res, next){

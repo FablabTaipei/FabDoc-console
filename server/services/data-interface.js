@@ -83,19 +83,29 @@ exports.addCommit = function(data){
 	if(image && typeof image == "string") image = JSON.parse(image);
 	if(machines && typeof machines != "string") machines = JSON.stringify(machines);
 
-	(image? self.saveImage(image) : Promise.resolve())
+	return (image? self.saveImage(image) : Promise.resolve())
 		.then(function(res){
 			// append machines	// Machines: id, name, description, commit_ids?
 			// append commit
 			var db = admin.database();
-			var commitCountRef = db.ref("commit/_count");
-			commitCountRef.transaction(function(currentCount) {
-				if(currentCount) currentCount++;
-				else currentCount = 1;
+			var commitCountRef = db.ref("commit");
+			// commitCountRef.transaction(function(currentCount) {
+			// 	if(currentCount) currentCount++;
+			// 	else currentCount = 1;
 
-				db.ref('commit/' + currentCount).set( /* blahblah... */);
+			// 	db.ref('commit/' + currentCount).set( /* blahblah... */);
 
-				return currentCount;
+			// 	return currentCount;
+			// });
+			return commitCountRef.push({
+				project_id: data.project_id,
+				user_id: data.user_id,
+				message: message,
+				components: components,
+				machines: machines,
+				repos: repos,
+				note: note,
+				image_data: res? JSON.stringify(res) : ""
 			});
 		})
 		.catch(function(err){
