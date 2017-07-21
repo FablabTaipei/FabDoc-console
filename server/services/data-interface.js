@@ -4,7 +4,7 @@ var utils = require('../utils');
 
 var serviceAccount = require("../config/serviceAccountKey.json");
 
-var storage = require('@google-cloud/storage')({ keyFilename: "../config/serviceAccountKey.json" });
+var storage = require('@google-cloud/storage')({ keyFilename: "server/config/serviceAccountKey.json" });
 
 var bucket = storage.bucket('fabdoc-beta.appspot.com');
 
@@ -13,48 +13,17 @@ admin.initializeApp({
   databaseURL: "https://fabdoc-beta.firebaseio.com"
 });
 
-
-// var b64string = /* whatever */;
-// var buf = Buffer.from(b64string, 'base64'); // Ta-da
-
-
-// Get Download URL from file uploaded with Cloud Functions for Firebase
-// https://stackoverflow.com/a/43764656/2238770
-
-// const UUID = require("uuid-v4");
-
-// const fbId = "<YOUR APP ID>";
-// const fbKeyFile = "./YOUR_AUTH_FIlE.json";
-// const gcs = require('@google-cloud/storage')({keyFilename: fbKeyFile});
-// const bucket = gcs.bucket(`${fbId}.appspot.com`);
-
-// var upload = (localFile, remoteFile) => {
-
-//   let uuid = UUID();
-
-//   return bucket.upload(localFile, {
-//         destination: remoteFile,
-//         uploadType: "media",
-//         metadata: {
-//           metadata: {
-//             contentType: 'image/png',
-//             firebaseStorageDownloadTokens: uuid
-//           }
-//         }
-//       })
-//       .then((data) => {
-
-//           let file = data[0];
-
-//           return Promise.resolve("https://firebasestorage.googleapis.com/v0/b/" + bucket.name + "/o/" + encodeURIComponent(file.name) + "?alt=media&token=" + uuid);
-//       });
-// }
-
-// upload(localPath, remotePath).then( downloadURL => {
-// 	console.log(downloadURL);
-// });
-
-
+var commitSample = {
+	id: 1,
+	project_id: 1,
+	user_id: 1,
+	message: "test",
+	components: "[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]",
+	machines: "[\"shit\",\"damn\"]",
+	repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
+	note: "test",
+	image_data: "[{\"bucket\":\"fabdoc-beta.appspot.com\",\"encodeFilename\":\"1500647671589-flower.jpg\",\"token\":\"106dacc9710b7a4ab6dadacca541879a\"}]"
+};
 
 // data: 
 // 	message {String}
@@ -80,22 +49,45 @@ exports.addCommit = function(data){
 		image = data.image || null;
 
 	if(components && typeof components != "string") components = JSON.stringify(components);
-	if(image && typeof image == "string") image = JSON.parse(image);
+	// if(image && typeof image == "string") image = JSON.parse(image);
 	if(machines && typeof machines != "string") machines = JSON.stringify(machines);
 
-	(image? self.saveImage(image) : Promise.resolve())
+	return (image? self.saveImage(image) : Promise.resolve())
 		.then(function(res){
 			// append machines	// Machines: id, name, description, commit_ids?
 			// append commit
 			var db = admin.database();
-			var commitCountRef = db.ref("commit/_count");
-			commitCountRef.transaction(function(currentCount) {
-				if(currentCount) currentCount++;
-				else currentCount = 1;
+			var rootRef = db.ref();
+			var commitRef = db.ref("commit");
+			
+			return new Promise(function(resolve, reject){
+				var resData;
+				rootRef.child('/_tableInfo/commit').transaction(function(currentData){
+					var currentIndex = 1;
+					var currentCount = 0;
+					if(currentData != null){
+						currentIndex = currentData._next;
+						currentCount = currentData._count;
+					}
 
-				db.ref('commit/' + currentCount).set( /* blahblah... */);
+					resData = {
+						id: currentIndex,
+						project_id: data.project_id,
+						user_id: data.user_id,
+						message: message,
+						components: components,
+						machines: machines,
+						repos: repos,
+						note: note,
+						image_data: res? JSON.stringify(res) : ""
+					};
 
-				return currentCount;
+					commitRef.child(currentIndex.toString()).set(resData);
+
+					return { _count: ++currentCount, _next: ++currentIndex };
+				})
+				.then(function(){ resolve(resData); })
+				.catch(function(err){ reject(err); });
 			});
 		})
 		.catch(function(err){
@@ -104,19 +96,48 @@ exports.addCommit = function(data){
 
 };
 
+exports.updateCommit = function(id, data){	
+	if(!id || isNaN(id)) return Promise.reject("id is invalid.");
+	var self = this;
+	var validProps = Object.keys(commitSample);
+	var toUpdate = {};
+
+	// handle the change image?
+	// if(data.image)
+
+	for(var p in data){
+		if(validProps.indexOf(p) != -1) toUpdate[p] = data[p];
+	}
+
+	var db = admin.database();
+	var lookupRef = db.ref("commit/" + id);
+
+	return new Promise(function(resolve, reject){
+		lookupRef.once("value")
+			.then(function(snapshot) {
+				if(snapshot.exists()){
+					// do update
+					lookupRef.update(toUpdate).then(function(){ resolve(); }, function(err){ reject(err); });
+				}else{
+					self.addCommit(data).then(function(result){ resolve(result); }, function(err){ reject(err); });
+				}
+			});
+	});
+};
+
 exports.saveImage = function(imgArray){
-	// filename, imageBase64String, mediaType
+	// filename, base64String, mediaType
 	if(!Array.isArray(imgArray)) imgArray = [imgArray];
 	
 	var promises = imgArray.map(function(item){
 		var token = utils.getToken();
-		var filename = item.filename;
-		var imageBase64String = item.imageBase64String;
+		var filename = (new Date()).getTime() + "-" + item.filename;
+		var base64String = item.base64String;
 		var mediaType = item.mediaType || 'image/png';
 		return new Promise(function(resolve, reject){
 			var file = bucket.file(filename);
 			var bufferStream = new stream.PassThrough();
-			bufferStream.end( Buffer.from(imageBase64String, 'base64') );
+			bufferStream.end( Buffer.from(base64String, 'base64') );
 
 			bufferStream.pipe(
 				file.createWriteStream({
@@ -126,7 +147,8 @@ exports.saveImage = function(imgArray){
 						firebaseStorageDownloadTokens: token
 					},
 					public: true,
-					validation: "md5"
+					validation: "md5",
+					resumable: false
 				})
 			)
 			.on('error', function(err) { reject(err); })
