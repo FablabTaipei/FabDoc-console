@@ -128,7 +128,8 @@ module.exports = function(app, passport) {
             repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
             note: "this is a test",
             image: image
-        }).then(function(){
+        }).then(function(result){
+            // console.log(result);
             res.status(200).send("OK");
         }, function(){
             res.status(500).json({error: "Internal server error"});

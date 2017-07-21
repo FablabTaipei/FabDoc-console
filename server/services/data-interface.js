@@ -13,6 +13,18 @@ admin.initializeApp({
   databaseURL: "https://fabdoc-beta.firebaseio.com"
 });
 
+var commitSample = {
+	id: 1,
+	project_id: 1,
+	user_id: 1,
+	message: "test",
+	components: "[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]",
+	machines: "[\"shit\",\"damn\"]",
+	repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
+	note: "test",
+	image_data: "[{\"bucket\":\"fabdoc-beta.appspot.com\",\"encodeFilename\":\"1500647671589-flower.jpg\",\"token\":\"106dacc9710b7a4ab6dadacca541879a\"}]"
+};
+
 // data: 
 // 	message {String}
 //  components {Object|String}
@@ -45,23 +57,72 @@ exports.addCommit = function(data){
 			// append machines	// Machines: id, name, description, commit_ids?
 			// append commit
 			var db = admin.database();
-			var commitCountRef = db.ref("commit");
+			var rootRef = db.ref();
+			var commitRef = db.ref("commit");
 			
-			return commitCountRef.push({
-				project_id: data.project_id,
-				user_id: data.user_id,
-				message: message,
-				components: components,
-				machines: machines,
-				repos: repos,
-				note: note,
-				image_data: res? JSON.stringify(res) : ""
+			return new Promise(function(resolve, reject){
+				var resData;
+				rootRef.child('/_tableInfo/commit').transaction(function(currentData){
+					var currentIndex = 1;
+					var currentCount = 0;
+					if(currentData != null){
+						currentIndex = currentData._next;
+						currentCount = currentData._count;
+					}
+
+					resData = {
+						id: currentIndex,
+						project_id: data.project_id,
+						user_id: data.user_id,
+						message: message,
+						components: components,
+						machines: machines,
+						repos: repos,
+						note: note,
+						image_data: res? JSON.stringify(res) : ""
+					};
+
+					commitRef.child(currentIndex.toString()).set(resData);
+
+					return { _count: ++currentCount, _next: ++currentIndex };
+				})
+				.then(function(){ resolve(resData); })
+				.catch(function(err){ reject(err); });
 			});
 		})
 		.catch(function(err){
 			console.log(err);
 		});
 
+};
+
+exports.updateCommit = function(id, data){	
+	if(!id || isNaN(id)) return Promise.reject("id is invalid.");
+	var self = this;
+	var validProps = Object.keys(commitSample);
+	var toUpdate = {};
+
+	// handle the change image?
+	// if(data.image)
+
+	for(var p in data){
+		if(validProps.indexOf(p) != -1) toUpdate[p] = data[p];
+	}
+
+	var db = admin.database();
+	var lookupRef = db.ref("commit/" + id);
+
+	return new Promise(function(resolve, reject){
+		lookupRef.once("value")
+			.then(function(snapshot) {
+				if(snapshot.exists()){
+					// do update
+					lookupRef.update(toUpdate).then(function(){ resolve(); }, function(err){ reject(err); });
+				}else{
+					self.addCommit(data).then(function(result){ resolve(result); }, function(err){ reject(err); });
+				}
+			});
+	});
 };
 
 exports.saveImage = function(imgArray){
