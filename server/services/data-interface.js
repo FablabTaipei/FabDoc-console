@@ -13,49 +13,6 @@ admin.initializeApp({
   databaseURL: "https://fabdoc-beta.firebaseio.com"
 });
 
-
-// var b64string = /* whatever */;
-// var buf = Buffer.from(b64string, 'base64'); // Ta-da
-
-
-// Get Download URL from file uploaded with Cloud Functions for Firebase
-// https://stackoverflow.com/a/43764656/2238770
-
-// const UUID = require("uuid-v4");
-
-// const fbId = "<YOUR APP ID>";
-// const fbKeyFile = "./YOUR_AUTH_FIlE.json";
-// const gcs = require('@google-cloud/storage')({keyFilename: fbKeyFile});
-// const bucket = gcs.bucket(`${fbId}.appspot.com`);
-
-// var upload = (localFile, remoteFile) => {
-
-//   let uuid = UUID();
-
-//   return bucket.upload(localFile, {
-//         destination: remoteFile,
-//         uploadType: "media",
-//         metadata: {
-//           metadata: {
-//             contentType: 'image/png',
-//             firebaseStorageDownloadTokens: uuid
-//           }
-//         }
-//       })
-//       .then((data) => {
-
-//           let file = data[0];
-
-//           return Promise.resolve("https://firebasestorage.googleapis.com/v0/b/" + bucket.name + "/o/" + encodeURIComponent(file.name) + "?alt=media&token=" + uuid);
-//       });
-// }
-
-// upload(localPath, remotePath).then( downloadURL => {
-// 	console.log(downloadURL);
-// });
-
-
-
 // data: 
 // 	message {String}
 //  components {Object|String}
@@ -89,14 +46,7 @@ exports.addCommit = function(data){
 			// append commit
 			var db = admin.database();
 			var commitCountRef = db.ref("commit");
-			// commitCountRef.transaction(function(currentCount) {
-			// 	if(currentCount) currentCount++;
-			// 	else currentCount = 1;
-
-			// 	db.ref('commit/' + currentCount).set( /* blahblah... */);
-
-			// 	return currentCount;
-			// });
+			
 			return commitCountRef.push({
 				project_id: data.project_id,
 				user_id: data.user_id,
@@ -120,7 +70,7 @@ exports.saveImage = function(imgArray){
 	
 	var promises = imgArray.map(function(item){
 		var token = utils.getToken();
-		var filename = item.filename;
+		var filename = (new Date()).getTime() + "-" + item.filename;
 		var base64String = item.base64String;
 		var mediaType = item.mediaType || 'image/png';
 		return new Promise(function(resolve, reject){
