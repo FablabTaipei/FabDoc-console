@@ -1,6 +1,7 @@
 
 var url = require('url');
 var md5 = require('md5');
+var fs = require('fs');
 var uuid = require('node-uuid');
 var strkey = "_fd";
 
@@ -48,3 +49,11 @@ exports.getParamPairs = function(req){
 exports.getToken = function(){
 	return md5(uuid.v4());
 };
+
+exports.base64_encode = function(file){
+	// read binary data
+    var bitmap = fs.readFileSync(file);
+    // convert binary data to base64 encoded string
+    return new Buffer(bitmap).toString('base64');
+};
+

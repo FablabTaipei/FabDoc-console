@@ -4,7 +4,7 @@ var utils = require('../utils');
 
 var serviceAccount = require("../config/serviceAccountKey.json");
 
-var storage = require('@google-cloud/storage')({ keyFilename: "../config/serviceAccountKey.json" });
+var storage = require('@google-cloud/storage')({ keyFilename: "server/config/serviceAccountKey.json" });
 
 var bucket = storage.bucket('fabdoc-beta.appspot.com');
 
@@ -80,7 +80,7 @@ exports.addCommit = function(data){
 		image = data.image || null;
 
 	if(components && typeof components != "string") components = JSON.stringify(components);
-	if(image && typeof image == "string") image = JSON.parse(image);
+	// if(image && typeof image == "string") image = JSON.parse(image);
 	if(machines && typeof machines != "string") machines = JSON.stringify(machines);
 
 	return (image? self.saveImage(image) : Promise.resolve())
@@ -115,18 +115,18 @@ exports.addCommit = function(data){
 };
 
 exports.saveImage = function(imgArray){
-	// filename, imageBase64String, mediaType
+	// filename, base64String, mediaType
 	if(!Array.isArray(imgArray)) imgArray = [imgArray];
 	
 	var promises = imgArray.map(function(item){
 		var token = utils.getToken();
 		var filename = item.filename;
-		var imageBase64String = item.imageBase64String;
+		var base64String = item.base64String;
 		var mediaType = item.mediaType || 'image/png';
 		return new Promise(function(resolve, reject){
 			var file = bucket.file(filename);
 			var bufferStream = new stream.PassThrough();
-			bufferStream.end( Buffer.from(imageBase64String, 'base64') );
+			bufferStream.end( Buffer.from(base64String, 'base64') );
 
 			bufferStream.pipe(
 				file.createWriteStream({
@@ -136,7 +136,8 @@ exports.saveImage = function(imgArray){
 						firebaseStorageDownloadTokens: token
 					},
 					public: true,
-					validation: "md5"
+					validation: "md5",
+					resumable: false
 				})
 			)
 			.on('error', function(err) { reject(err); })

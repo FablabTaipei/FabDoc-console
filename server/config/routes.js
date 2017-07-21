@@ -97,12 +97,27 @@ module.exports = function(app, passport) {
     // =====================================
     app.get('/testpush', isLoggedIn, function (req, res, next) {
         req.session.project = 1;
-        res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'));
+        res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'), 
+            { 
+                base64: utils.base64_encode( path.resolve(__dirname, '../../', 'client/images/flower.jpg') ),
+                filename: "flower.jpg",
+                type: "image/jpg"
+            }
+        );
     });
     app.post('/testpush', isLoggedIn, function (req, res, next) {
         var projectId = req.session.project;
         var userId = req.user;
         var formbody = req.body;
+        var image = null;
+
+        if(formbody.filename){
+            image = {
+                filename: formbody.filename,
+                base64String: formbody.base64String,
+                mediaType: formbody.mediaType
+            }
+        }
 
         interface.addCommit({
             project_id: projectId,
@@ -111,7 +126,8 @@ module.exports = function(app, passport) {
             components: JSON.stringify( [{ name: "hook", quantity: 2, point:[23, 25, 100, 200] }, { name: "hamer", quantity: 1, point:[66, 45, 150, 40] }] ),
             machines: JSON.stringify(['shit','damn']),
             repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
-            note: "this is a test"
+            note: "this is a test",
+            image: image
         }).then(function(){
             res.status(200).send("OK");
         }, function(){

@@ -8,6 +8,7 @@
 
 <body class="container">
 
+	<h3>Test for commit without image</h3>
 	<form method="post" class="validate" enctype="application/json">
 		<!-- <input type="hidden" id="questionID" name="questionID" value="" />
         <input type="hidden" id="tranRemoveOptions" name="removeOptions" value="" />
@@ -17,5 +18,20 @@
 
 	    <button type="submit" class="btn btn-primary">儲存</button>
 	</form>
+
+	<br/>
+	<h3>Test for commit with image</h3>
+	<form method="post" class="validate" enctype="application/json">
+		<input type="hidden" name="filename" value="<%= filename %>">
+		<input type="hidden" name="base64String" value="<%= base64 %>">
+		<input type="hidden" name="mediaType" value="<%= type %>">
+
+		<img src="data:<%= type %>;base64,<%= base64 %>" />
+
+		<input type="text" name="message" value="test with image"/>
+
+		<button type="submit" class="btn btn-primary">Save</button>
+	</form>
+
 </body>
 </html>
