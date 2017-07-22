@@ -64,6 +64,16 @@ body {
     /*height: 250px; width: 100%;*/
 }
 
+.qrcode {
+    display: block;
+    margin: auto;
+    margin-bottom: 50px;
+}
+
+.precommitDisplay {
+    display: none;
+}
+
 .option-row {
     padding: 5px 0px;
 }

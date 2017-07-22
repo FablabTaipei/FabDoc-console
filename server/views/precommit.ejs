@@ -9,123 +9,138 @@
         <script type="text/javascript" src="/client/js/jquery.areaSelect.js"></script>
 </head>
 
-<body class="container">
+<body>
 
     <header>
         <% include partials/header %>
     </header>
 
     <main>
-        <div class="well">
+        <div class="container">
+            <div v-if="qrcodeDisplay">
+                <div class="col-md-6 col-md-offset-3">
+                    <h3>Connect to your device</h3>
+                    <p>
+                        Turn on the Raspberry Pi installed FabDoc-RPi-client script, and scan the QR code with camera module.
+                    </p>
+                    <canvas class="qrcode" id="qrcode"></canvas>
+                    <div class="alert alert-info" role="alert">
+                        <span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span> If you succeed, the page will start to capture snapshot as <strong>precommit</strong>.
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="well">
             <button class="btn btn-default" onclick="preCommitBtnClick(this);">Start Pre-Commit</button>
             <p>Token: <span class="token"></span><canvas id="canvas"></canvas></p>
             <p>Status: <span class="status"></span></p>
-        </div>
-        <div class="col-xs-12 btn-push" v-cloak>
-            <button class="btn btn-success pull-right" type="button">
+        </div> -->
+            <div class="precommitDisplay" :style="precommitDisplay">
+                <div class="col-xs-12 btn-push" v-cloak>
+                    <button class="btn btn-success pull-right" type="button">
                 Push <span class="badge"> {{ commitQueue }} </span>
                 </button>
-        </div>
-        <div class="row">
-            <div class="col-md-8">
-                <div class="img-view"><img id="editor" src="" path="" /></div>
-                <div class="frame">
-                    <ul class="slidee">
-                    </ul>
                 </div>
-                <div class="scrollbar">
-                    <div class="handle"></div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <form>
-                    <h5><strong>Commit</strong></h5>
-                    <div class="form-group form-commit">
-                        <label for="inputCommit" class="sr-only">Commit</label>
-                        <input type="text" class="form-control" id="inputCommit">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="img-view"><img id="editor" src="" path="" /></div>
+                        <div class="frame">
+                            <ul class="slidee">
+                            </ul>
+                        </div>
+                        <div class="scrollbar">
+                            <div class="handle"></div>
+                        </div>
                     </div>
-                    <h5><strong>Components</strong></h5>
-                    <div class="form-group">
-                        <div class="row">
-                            <div class="col-xs-4">
-                                <label for="inputAmount" class="sr-only">Amount</label>
-                                <input type="number" class="form-control text-center" id="inputAmount" placeholder="quantity" />
+                    <div class="col-md-4">
+                        <form>
+                            <h5><strong>Commit</strong></h5>
+                            <div class="form-group form-commit">
+                                <label for="inputCommit" class="sr-only">Commit</label>
+                                <input type="text" class="form-control" id="inputCommit">
                             </div>
-                            <div class="col-xs-1">
-                                <p class="form-control-static text-center"> x </p>
-                            </div>
-                            <div class="col-xs-7">
-                                <label for="inputComponents" class="sr-only">Components</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="inputComponents" placeholder="name" />
-                                    <span class="input-group-btn">
+                            <h5><strong>Components</strong></h5>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-xs-4">
+                                        <label for="inputAmount" class="sr-only">Amount</label>
+                                        <input type="number" class="form-control text-center" id="inputAmount" placeholder="quantity" />
+                                    </div>
+                                    <div class="col-xs-1">
+                                        <p class="form-control-static text-center"> x </p>
+                                    </div>
+                                    <div class="col-xs-7">
+                                        <label for="inputComponents" class="sr-only">Components</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="inputComponents" placeholder="name" />
+                                            <span class="input-group-btn">
                                         <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <ul class="component-list" v-cloak>
+                                    <li v-for="component in components" class="component" :key="component.id" :class="{ editing: component == editedComp }">
+                                        <div class="col-xs-4">
+                                            <label @dbclick="editComp(component)">{{ component.amount }}</label>
+                                            <input class="form-control edit" type="number" v-model="component.amount" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
+                                        </div>
+                                        <div class="col-xs-1">
+                                            <p class="form-control-static text-center"> x </p>
+                                        </div>
+                                        <div class="col-xs-7">
+                                            <label class="text-center" @dbclick="editComp(component)">{{ component.name }}</label>
+                                            <input class="form-control edit" type="text" v-model="component.name" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
+                                            <button class="remove" @click="removeComp(component)"></button>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <h5><strong>Machines</strong></h5>
+                            <div class="form-group has-feedback">
+                                <label for="inputMachines" class="sr-only">Machines</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="inputMachines" />
+                                    <span class="input-group-btn">
+                                <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
                                     </span>
                                 </div>
+                                <ul class="machine-list" v-cloak>
+                                    <li v-for="machine in machines" class="machine" :key="machine.id" :class="{ editing: machine == editedMachine }">
+                                        <label @dbclick="editMachine(machine)">{{ machine.name }}</label>
+                                        <input class="form-control edit" type="text" v-model="machine.name" v-machine-focus=" machine == editedMachine" @blur="doneEdit(machine)" @keyup.enter="doneEdit(machine)" @keyup.esc="cancelEdit(machine)" />
+                                        <button class="remove" @click="removeMachine(machine)"></button>
+                                    </li>
+                                </ul>
                             </div>
-                        </div>
-                        <ul class="component-list" v-cloak>
-                            <li v-for="component in components" class="component" :key="component.id" :class="{ editing: component == editedComp }">
-                                <div class="col-xs-4">
-                                    <label @dbclick="editComp(component)">{{ component.amount }}</label>
-                                    <input class="form-control edit" type="number" v-model="component.amount" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
-                                </div>
-                                <div class="col-xs-1">
-                                    <p class="form-control-static text-center"> x </p>
-                                </div>
-                                <div class="col-xs-7">
-                                    <label class="text-center" @dbclick="editComp(component)">{{ component.name }}</label>
-                                    <input class="form-control edit" type="text" v-model="component.name" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
-                                    <button class="remove" @click="removeComp(component)"></button>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                    <h5><strong>Machines</strong></h5>
-                    <div class="form-group has-feedback">
-                        <label for="inputMachines" class="sr-only">Machines</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="inputMachines" />
-                            <span class="input-group-btn">
+                            <h5><strong>Repository</strong></h5>
+                            <div class="form-group has-feedback form-repo">
+                                <label for="inputRepository" class="sr-only">Repository</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-link"></span></span>
+                                    <input type="text" class="form-control" id="inputRepository" />
+                                    <span class="input-group-btn">
                                 <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                        </div>
-                        <ul class="machine-list" v-cloak>
-                            <li v-for="machine in machines" class="machine" :key="machine.id" :class="{ editing: machine == editedMachine }">
-                                <label @dbclick="editMachine(machine)">{{ machine.name }}</label>
-                                <input class="form-control edit" type="text" v-model="machine.name" v-machine-focus=" machine == editedMachine" @blur="doneEdit(machine)" @keyup.enter="doneEdit(machine)" @keyup.esc="cancelEdit(machine)" />
-                                <button class="remove" @click="removeMachine(machine)"></button>
-                            </li>
-                        </ul>
+                                    </span>
+                                </div>
+                                <ul class="repo-list" v-cloak>
+                                    <li v-for="repo in repos" class="repo" :key="repo.id" :class="{ editing: repo == editedRepo }">
+                                        <label @dbclick="editRepo(repo)">{{ repo.name }}</label>
+                                        <input class="form-control edit" type="text" v-model="repo.name" v-repo-focus=" repo == editedRepo" @blur="doneEdit(repo)" @keyup.enter="doneEdit(repo)" @keyup.esc="cancelEdit(repo)" />
+                                        <button class="remove" @click="removeRepo(repo)"></button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <h5><strong>Note</strong></h5>
+                            <div class="form-group form-note">
+                                <label for="inputNote" class="sr-only">Note</label>
+                                <textarea class="form-control" id="inputNote"></textarea>
+                            </div>
+                        </form>
                     </div>
-                    <h5><strong>Repository</strong></h5>
-                    <div class="form-group has-feedback form-repo">
-                        <label for="inputRepository" class="sr-only">Repository</label>
-                        <div class="input-group">
-                            <span class="input-group-addon"><span class="glyphicon glyphicon-link"></span></span>
-                            <input type="text" class="form-control" id="inputRepository" />
-                            <span class="input-group-btn">
-                                <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
-                            </span>
-                        </div>
-                        <ul class="repo-list" v-cloak>
-                            <li v-for="repo in repos" class="repo" :key="repo.id" :class="{ editing: repo == editedRepo }">
-                                <label @dbclick="editRepo(repo)">{{ repo.name }}</label>
-                                <input class="form-control edit" type="text" v-model="repo.name" v-repo-focus=" repo == editedRepo" @blur="doneEdit(repo)" @keyup.enter="doneEdit(repo)" @keyup.esc="cancelEdit(repo)" />
-                                <button class="remove" @click="removeRepo(repo)"></button>
-                            </li>
-                        </ul>
-                    </div>
-                    <h5><strong>Note</strong></h5>
-                    <div class="form-group form-note">
-                        <label for="inputNote" class="sr-only">Note</label>
-                        <textarea class="form-control" id="inputNote"></textarea>
-                    </div>
-                </form>
+                    <button type="submit" class="btn btn-primary pull-right btn-save">Save</button>
+                    <button type="submit" class="btn btn-default pull-right">Uncommit</button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary pull-right btn-save">Save</button>
-            <button type="submit" class="btn btn-default pull-right">Uncommit</button>
-        </div>
         </div>
 
     </main>
@@ -193,29 +208,103 @@
             $('.frame').sly('reload');
         });
 
-        function preCommitBtnClick(o) {
-            $(o).prop("disabled", true);
+        // $(o).prop("disabled", true);
 
-            socketInstance = io.connect();
-            socketInstance.on('connect', function(msg) {
-                console.log("Browser Connected.");
+        socketInstance = io.connect();
+        socketInstance.on('connect', function(msg) {
+            console.log("Browser Connected.");
+        });
+        socketInstance.on('pass_token', function(data) {
+            qrcodelib.toCanvas($('#qrcode')[0], data.token, function(error) {
+                if (error) console.error(error)
+                console.log('QR code generated!');
             });
-            socketInstance.on('pass_token', function(data) {
-                $(".well span.token").text(data.token);
-                qrcodelib.toCanvas(document.getElementById('canvas'), data.token, function(error) {
-                    if (error) console.error(error)
-                    console.log('success!');
-                });
-            });
-            socketInstance.on('pass_compressed_image', function(data) {
-                var image = '<li>' + '<input type="checkbox" id="pr' +
-                    frame.items.length + '" /><label for="pr' + frame.items.length + '" class="img-label"><img id="item-' +
-                    frame.items.length + '" src="data:' + data.type + ';base64,' +
-                    data.base64 + '" path="' + data.filepath + '"/></label>' + '</li>';
-                frame.add(image);
-                frame.activate(frame.items.length - 1);
-            });
-        }
+        });
+        socketInstance.on('pass_compressed_image', function(data) {
+            var image = '<li>' + '<input type="checkbox" id="pr' +
+                frame.items.length + '" /><label for="pr' + frame.items.length + '" class="img-label"><img id="item-' +
+                frame.items.length + '" src="data:' + data.type + ';base64,' +
+                data.base64 + '" path="' + data.filepath + '"/></label>' + '</li>';
+            frame.add(image);
+            frame.activate(frame.items.length - 1);
+        });
+
+        var app = new Vue({
+            el: '.container',
+            data: {
+                // commits: storage.fetch(),
+                // components: storage.fetch(),
+                // machines: ,
+                // repos: ,
+                // editedComp: null,
+                // editedMachine: null,
+                // editedRepo: null,
+                qrcodeDisplay: true,
+            },
+
+            watch: {
+                commits: {
+                    handler: function(commits) {
+                        storage.save(commits)
+                    },
+                    deep: true
+                },
+                components: {
+                    handler: function(components) {
+                        storage.save(components)
+                    },
+                    deep: true
+                },
+                machines: {
+                    handler: function(machines) {
+                        storage.save(machines)
+                    },
+                    deep: true
+                },
+                repos: {
+                    handler: function(repos) {
+                        storage.save(repos)
+                    },
+                    deep: true
+                },
+            },
+
+            computed: {
+                commitQueue: function() {
+                    return
+                }
+            },
+
+            methods: {
+                addCommit: function() {
+
+                },
+                removeCommit: function() {
+
+                },
+                editObject: function(object) {
+
+                },
+            },
+
+            directives: {
+                // 'component-focus': function(el, binding) {
+                //     if (binding.value) {
+                //         el.focus()
+                //     }
+                // },
+                // 'machine-focus': function(el, binding) {
+                //     if (binding.value) {
+                //         el.focus()
+                //     }
+                // },
+                // 'repo-focus': function(el, binding) {
+                //     if (binding.value) {
+                //         el.focus()
+                //     }
+                // }
+            }
+        });
     </script>
 </body>
 
