@@ -25,6 +25,14 @@ var commitSample = {
 	image_data: "[{\"bucket\":\"fabdoc-beta.appspot.com\",\"encodeFilename\":\"1500647671589-flower.jpg\",\"token\":\"106dacc9710b7a4ab6dadacca541879a\"}]"
 };
 
+var transactionTableInfo = function(currentData){
+	if(currentData === null) return { _count: 1, _next: 1 };
+	else return { _count: currentData._count + 1, _next: currentData._next + 1 };
+}
+
+// =====================================
+// For Add/Update commit ===============
+// =====================================
 // data: 
 // 	message {String}
 //  components {Object|String}
@@ -61,33 +69,27 @@ exports.addCommit = function(data){
 			var commitRef = db.ref("commit");
 			
 			return new Promise(function(resolve, reject){
-				var resData;
-				rootRef.child('/_tableInfo/commit').transaction(function(currentData){
-					var currentIndex = 1;
-					var currentCount = 0;
-					if(currentData != null){
-						currentIndex = currentData._next;
-						currentCount = currentData._count;
+				var resData = {
+					project_id: data.project_id,
+					user_id: data.user_id,
+					message: message,
+					components: components,
+					machines: machines,
+					repos: repos,
+					note: note,
+					image_data: res? JSON.stringify(res) : ""
+				};
+
+				rootRef.child('_tableInfo/commit').transaction(transactionTableInfo,
+					function(error, committed, snapshot) {
+						let currentData = snapshot.val();
+						let currentIndex = currentData._next;
+
+						resData.id = currentIndex;
+						
+						commitRef.child(currentIndex.toString()).set(resData);
 					}
-
-					resData = {
-						id: currentIndex,
-						project_id: data.project_id,
-						user_id: data.user_id,
-						message: message,
-						components: components,
-						machines: machines,
-						repos: repos,
-						note: note,
-						image_data: res? JSON.stringify(res) : ""
-					};
-
-					commitRef.child(currentIndex.toString()).set(resData);
-
-					return { _count: ++currentCount, _next: ++currentIndex };
-				})
-				.then(function(){ resolve(resData); })
-				.catch(function(err){ reject(err); });
+				).then(function(){ resolve(resData); }).catch(function(err){ reject(err); });
 			});
 		})
 		.catch(function(err){
@@ -160,3 +162,42 @@ exports.saveImage = function(imgArray){
 		Promise.all(promises).then(function(results){ resolve(results); }, function(err){ reject(err); });
 	});
 };
+
+// =====================================
+// For Add/Update project ==============
+// =====================================
+
+exports.addProject = function(name, description, license){
+	if(!name) return Promise.reject("name can not be empty");
+	if(name.replace(/[^a-zA-Z0-9\-_]/, '') != name) return Promise.reject("name only contains numbers, english letters, dash, underline.");
+	if(!isNaN(name)) return Promise.reject("name can not be a number.");
+
+	var db = admin.database();
+	var rootRef = db.ref();
+	var projectRef = rootRef.child("project");
+	console.log("in addProject");
+	return new Promise(function(resolve, reject){
+		projectRef.child(name).once("value")
+			.then(function(snapshot) {
+				if(snapshot.exists()) reject("name has duplicated.");
+				else{
+					// to add project.
+					var resData = {
+						name: name,
+						description: description || "",
+						License: license || ""
+					};
+					rootRef.child('/_tableInfo/project').transaction(transactionTableInfo, 
+						function(error, committed, snapshot) {
+							let currentData = snapshot.val();
+							let currentIndex = currentData._next;
+							
+							resData.id = currentIndex;
+							projectRef.child(currentIndex.toString()).set(resData);
+						}
+					).then(function(){ resolve(resData); }, function(err){ reject(err); });
+				}
+			}).catch(function(err){ reject(err); });
+	});
+};
+

@@ -105,7 +105,7 @@ module.exports = function(app, passport) {
             }
         );
     });
-    app.post('/testpush', isLoggedIn, function (req, res, next) {
+    app.post('/testpush/commit/add', isLoggedIn, function (req, res, next) {
         var projectId = req.session.project;
         var userId = req.user;
         var formbody = req.body;
@@ -131,10 +131,25 @@ module.exports = function(app, passport) {
         }).then(function(result){
             // console.log(result);
             res.status(200).send("OK");
-        }, function(){
-            res.status(500).json({error: "Internal server error"});
+        }, function(err){
+            res.status(500).json({error: "Internal server error: " + err});
         });
 
+    });
+
+    app.post('/testpush/project/add', isLoggedIn, function(req, res, next){
+        var formbody = req.body;
+
+        interface.addProject(formbody.name, formbody.description, formbody.license)
+            .then(
+                function(result){
+                    console.log(result);
+                    res.status(200).send("OK");
+                },
+                function(err){
+                    res.status(500).json({error: "Internal server error: " + err});
+                }
+            );
     });
 
     // app.get('/console/:type(question|gift|player)', isLoggedIn, function(req, res, next){

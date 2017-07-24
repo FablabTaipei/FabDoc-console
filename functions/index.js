@@ -42,3 +42,14 @@ exports.serializeData = functions.database.ref('/commit/{pushId}')
 
 		return Promise.resolve();
     });
+
+exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
+	.onCreate(event => {
+		let pushId = event.params.pushId;
+		let data = event.data;
+		const original = data.val();
+		if(!isNaN(pushId) && isNaN(original)){	// pushId is Number, and data is not number
+			return data.ref.parent.child(original.name).set(parseInt(pushId));
+		}
+	});
+
