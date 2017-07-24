@@ -79,6 +79,11 @@ module.exports = function(app, passport) {
         res.render(path.resolve(__dirname, '../', 'views/login.ejs'));
     });
 
+    app.get('/create', isLoggedIn, function (req, res, next) {
+        res.render(path.resolve(__dirname, '../', 'views/create.ejs'));
+        // req.session.project = 1;
+    });
+
     app.get('/precommit', isLoggedIn, function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
         // req.session.project = 1;
