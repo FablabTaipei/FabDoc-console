@@ -147,8 +147,9 @@ module.exports = function(app, passport) {
         });
         app.post('/testpush/project/add', isLoggedIn, function(req, res, next){
             var formbody = req.body;
+            var userId = req.user;
 
-            interface.addProject(formbody.name, formbody.description, formbody.license)
+            interface.addProject(formbody.name, userId, formbody.description, formbody.license)
                 .then(
                     function(result){
                         console.log(result);
