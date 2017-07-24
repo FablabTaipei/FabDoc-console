@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <% include partials/head %>
+</head>
+
+<body>
+
+    <header>
+        <% include partials/header %>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="col-md-3">
+
+            </div>
+            <div class="col-md-9 project-list">
+                <ul class="list-unstyled">
+                    <li class="row project-item" id="project-item" v-for="item in items">
+                        <div class="col-md-8 project-name">
+                            <h3>
+                                <a href="/"> {{item.name}} </a>
+                            </h3>
+                            <p>
+                                {{item.description}}
+                            </p>
+                        </div>
+                        <div class="col-md-4 project-img">
+                            <a href="#">
+                            <img class="project-img" src="" />
+                        </a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <% include partials/footer %>
+    </footer>
+
+    <script type="text/javascript">
+        var projectList = new Vue({
+            el: '#project-item',
+            data: {
+                // items: 
+            }
+        });
+    </script>
+
+</body>
+
+</html>
