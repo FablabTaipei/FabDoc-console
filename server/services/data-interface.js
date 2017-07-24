@@ -166,8 +166,8 @@ exports.saveImage = function(imgArray){
 // =====================================
 // For Add/Update project ==============
 // =====================================
-
-exports.addProject = function(name, description, license){
+exports.addProject = function(name, user_id, description, license){
+	if(!user_id) return Promise.reject("user_id can not be empty");
 	if(!name) return Promise.reject("name can not be empty");
 	if(name.replace(/[^a-zA-Z0-9\-_]/, '') != name) return Promise.reject("name only contains numbers, english letters, dash, underline.");
 	if(!isNaN(name)) return Promise.reject("name can not be a number.");
@@ -175,7 +175,7 @@ exports.addProject = function(name, description, license){
 	var db = admin.database();
 	var rootRef = db.ref();
 	var projectRef = rootRef.child("project");
-	console.log("in addProject");
+	
 	return new Promise(function(resolve, reject){
 		projectRef.child(name).once("value")
 			.then(function(snapshot) {
@@ -184,6 +184,7 @@ exports.addProject = function(name, description, license){
 					// to add project.
 					var resData = {
 						name: name,
+						user_id: user_id,
 						description: description || "",
 						License: license || ""
 					};

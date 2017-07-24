@@ -20,6 +20,7 @@
             </form>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="/precommit">Pre Commit</a></li>
+                <% if(isDev){ %>
                 <li><a href="/testpush">Test Push</a></li>
                 <li><a href="/create/project"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> New project</a></li>
                 <li class="dropdown">

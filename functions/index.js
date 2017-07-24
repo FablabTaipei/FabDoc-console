@@ -49,7 +49,19 @@ exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
 		let data = event.data;
 		const original = data.val();
 		if(!isNaN(pushId) && isNaN(original)){	// pushId is Number, and data is not number
-			return data.ref.parent.child(original.name).set(parseInt(pushId));
+
+			let currentRef = data.ref;
+			let rootRef = currentRef.root;
+
+			rootRef.child("user/" + original.user_id + "/projects").transaction(function(currentData){
+				if(currentData){
+					let list = JSON.parse(currentData);
+					if(list.indexOf(original.id) == -1) list.push(original.id);
+					return JSON.stringify(list);
+				}else return "[" + original.id + "]"; 
+			});
+			
+			return currentRef.parent.child(original.name).set(parseInt(pushId));
 		}
 	});
 
