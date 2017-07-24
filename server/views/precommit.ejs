@@ -17,7 +17,7 @@
 
     <main>
         <div class="container">
-            <div v-if="qrcodeDisplay">
+            <div id='qrcode-view'>
                 <div class="col-md-6 col-md-offset-3">
                     <h3>Connect to your device</h3>
                     <p>
@@ -34,7 +34,7 @@
             <p>Token: <span class="token"></span><canvas id="canvas"></canvas></p>
             <p>Status: <span class="status"></span></p>
         </div> -->
-            <div class="precommitDisplay" :style="precommitDisplay">
+            <div id='precommit-view'>
                 <div class="col-xs-12 btn-push" v-cloak>
                     <button class="btn btn-success pull-right" type="button">
                 Push <span class="badge"> {{ commitQueue }} </span>
@@ -152,8 +152,8 @@
     <script type="text/javascript">
         var tag_editor_options = {
             initAreas: [{
-                "width": 500,
-                "height": 500
+                "width ": 500,
+                "height ": 500
             }],
             deleteMethod: 'click',
             area: {
@@ -197,7 +197,7 @@
         frame.on('active', function(e, i) {
             // Show clicked activated image into preview editor
             var activeEl = $('#item-' + i);
-            $("#editor")
+            $("#editor ")
                 .attr('src', activeEl.attr('src'))
                 .attr('path', activeEl.attr('path'));
         });
@@ -208,11 +208,11 @@
             $('.frame').sly('reload');
         });
 
-        // $(o).prop("disabled", true);
+        // $(o).prop("disabled ", true);
 
         socketInstance = io.connect();
         socketInstance.on('connect', function(msg) {
-            console.log("Browser Connected.");
+            console.log("Browser Connected. ");
         });
         socketInstance.on('pass_token', function(data) {
             qrcodelib.toCanvas($('#qrcode')[0], data.token, function(error) {
@@ -221,90 +221,89 @@
             });
         });
         socketInstance.on('pass_compressed_image', function(data) {
-            var image = '<li>' + '<input type="checkbox" id="pr' +
-                frame.items.length + '" /><label for="pr' + frame.items.length + '" class="img-label"><img id="item-' +
-                frame.items.length + '" src="data:' + data.type + ';base64,' +
-                data.base64 + '" path="' + data.filepath + '"/></label>' + '</li>';
+            var image = '<li>' + '<input type="checkbox " id="pr ' +
+                frame.items.length + ' " /><label for="pr ' + frame.items.length + ' " class="img-label "><img id="item- ' +
+                frame.items.length + ' " src="data: ' + data.type + ';base64, ' +
+                data.base64 + ' " path=" ' + data.filepath + ' "/></label>' + '</li>';
             frame.add(image);
             frame.activate(frame.items.length - 1);
         });
-
-        var app = new Vue({
-            el: '.container',
-            data: {
-                // commits: storage.fetch(),
-                // components: storage.fetch(),
-                // machines: ,
-                // repos: ,
-                // editedComp: null,
-                // editedMachine: null,
-                // editedRepo: null,
-                qrcodeDisplay: true,
-            },
-
-            watch: {
-                commits: {
-                    handler: function(commits) {
-                        storage.save(commits)
-                    },
-                    deep: true
-                },
-                components: {
-                    handler: function(components) {
-                        storage.save(components)
-                    },
-                    deep: true
-                },
-                machines: {
-                    handler: function(machines) {
-                        storage.save(machines)
-                    },
-                    deep: true
-                },
-                repos: {
-                    handler: function(repos) {
-                        storage.save(repos)
-                    },
-                    deep: true
-                },
-            },
-
-            computed: {
-                commitQueue: function() {
-                    return
-                }
-            },
-
-            methods: {
-                addCommit: function() {
-
-                },
-                removeCommit: function() {
-
-                },
-                editObject: function(object) {
-
-                },
-            },
-
-            directives: {
-                // 'component-focus': function(el, binding) {
-                //     if (binding.value) {
-                //         el.focus()
-                //     }
-                // },
-                // 'machine-focus': function(el, binding) {
-                //     if (binding.value) {
-                //         el.focus()
-                //     }
-                // },
-                // 'repo-focus': function(el, binding) {
-                //     if (binding.value) {
-                //         el.focus()
-                //     }
-                // }
-            }
-        });
+        // var app = new Vue({
+        //     el: '.container',
+        //     data: {
+        //         // commits: storage.fetch(),
+        //         // components: storage.fetch(),
+        //         // machines: ,
+        //         // repos: ,
+        //         // editedComp: null,
+        //         // editedMachine: null,
+        //         // editedRepo: null,
+        //         qrcodeDisplay: true,
+        //     },
+        //
+        //     watch: {
+        //         commits: {
+        //             handler: function(commits) {
+        //                 storage.save(commits)
+        //             },
+        //             deep: true
+        //         },
+        //         components: {
+        //             handler: function(components) {
+        //                 storage.save(components)
+        //             },
+        //             deep: true
+        //         },
+        //         machines: {
+        //             handler: function(machines) {
+        //                 storage.save(machines)
+        //             },
+        //             deep: true
+        //         },
+        //         repos: {
+        //             handler: function(repos) {
+        //                 storage.save(repos)
+        //             },
+        //             deep: true
+        //         },
+        //     },
+        //
+        //     computed: {
+        //         commitQueue: function() {
+        //             return
+        //         }
+        //     },
+        //
+        //     methods: {
+        //         addCommit: function() {
+        //
+        //         },
+        //         removeCommit: function() {
+        //
+        //         },
+        //         editObject: function(object) {
+        //
+        //         },
+        //     },
+        //
+        //     directives: {
+        //         // 'component-focus': function(el, binding) {
+        //         //     if (binding.value) {
+        //         //         el.focus()
+        //         //     }
+        //         // },
+        //         // 'machine-focus': function(el, binding) {
+        //         //     if (binding.value) {
+        //         //         el.focus()
+        //         //     }
+        //         // },
+        //         // 'repo-focus': function(el, binding) {
+        //         //     if (binding.value) {
+        //         //         el.focus()
+        //         //     }
+        //         // }
+        //     }
+        // });
     </script>
 </body>
 

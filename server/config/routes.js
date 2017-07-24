@@ -79,9 +79,29 @@ module.exports = function(app, passport) {
         res.render(path.resolve(__dirname, '../', 'views/login.ejs'));
     });
 
-    app.get('/create', isLoggedIn, function (req, res, next) {
-        res.render(path.resolve(__dirname, '../', 'views/create.ejs'));
+    app.get('/create/project', isLoggedIn, function (req, res, next) {
+        res.render(path.resolve(__dirname, '../', 'views/createProject.ejs'));
         // req.session.project = 1;
+    });
+
+    app.post('/create/project/add', isLoggedIn, function(req, res, next){
+        var formbody = req.body;
+
+        interface.addProject(formbody.projectName, formbody.description, formbody.license)
+            .then(
+                function(result){
+                    console.log(result);
+                    res.redirect('/precommit')
+                    // res.status(200).send("OK");
+                },
+                function(err){
+                    res.status(500).json({error: "Internal server error: " + err});
+                }
+            );
+    });
+
+    app.get('/projects', isLoggedIn, function (req, res, next) {
+        res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'));
     });
 
     app.get('/precommit', isLoggedIn, function (req, res, next) {
@@ -102,8 +122,8 @@ module.exports = function(app, passport) {
     // =====================================
     app.get('/testpush', isLoggedIn, function (req, res, next) {
         req.session.project = 1;
-        res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'), 
-            { 
+        res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'),
+            {
                 base64: utils.base64_encode( path.resolve(__dirname, '../../', 'client/images/flower.jpg') ),
                 filename: "flower.jpg",
                 type: "image/jpg"
@@ -145,7 +165,7 @@ module.exports = function(app, passport) {
     app.post('/testpush/project/add', isLoggedIn, function(req, res, next){
         var formbody = req.body;
 
-        interface.addProject(formbody.name, formbody.description, formbody.license)
+        interface.addProject(formbody.projectName, formbody.description, formbody.license)
             .then(
                 function(result){
                     console.log(result);
