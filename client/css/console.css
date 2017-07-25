@@ -4,7 +4,7 @@ body {
     background-color: #FAF9F9;
 }
 
-/*[v-cloak] {display: none}*/
+[v-cloak] {display: none}
 
 .form-signin {
     max-width: 330px;
