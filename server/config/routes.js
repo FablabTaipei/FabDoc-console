@@ -74,7 +74,7 @@ module.exports = function(app, passport) {
     // CONSOLE =============================
     // =====================================
     app.get('/', isLoggedIn, function (req, res, next) {
-        res.render(path.resolve(__dirname, '../', 'views/index.ejs'), { isDev: isDev });
+        res.render(path.resolve(__dirname, '../', 'views/index.ejs'));
     });
     // show the login form
     app.get('/login', function(req, res) {
@@ -89,11 +89,13 @@ module.exports = function(app, passport) {
 
     app.post('/create/project/add', isLoggedIn, function(req, res, next){
         var formbody = req.body;
+        var userId = req.user;
 
-        interface.addProject(formbody.projectName, formbody.description, formbody.license)
+        interface.addProject(formbody.projectName, userId, formbody.description, formbody.license)
             .then(
                 function(result){
-                    console.log(result);
+                    req.session.project = parseInt(result.id);
+                    // console.log(result);
                     res.redirect('/precommit')
                     // res.status(200).send("OK");
                 },
@@ -104,18 +106,23 @@ module.exports = function(app, passport) {
     });
 
     app.get('/projects', isLoggedIn, function (req, res, next) {
-        res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'));
+        interface.getProjects(req.user)
+            .then(
+                function(results){ 
+                    res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'), { itemsStr: JSON.stringify(results) } ); 
+                },
+                function(err){ res.status(500).json({error: "Internal server error: " + err}); }
+            );        
     });
 
     app.get('/precommit', isLoggedIn, function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
-        // req.session.project = 1;
     });
 
     app.post('/addcommit', isLoggedIn, function(req, res, next){
-        var user = req.user;
-        var project = req.session.project;
-        if(project && user){
+        var userId = req.user;
+        var projectId = req.session.project;
+        if(projectId && user){
             // ...
         }
     });
@@ -136,7 +143,7 @@ module.exports = function(app, passport) {
             );
         });
         app.post('/testpush/commit/add', isLoggedIn, function (req, res, next) {
-            var projectId = req.session.project;
+            var projectId = req.session.project || 1;
             var userId = req.user;
             var formbody = req.body;
             var image = null;

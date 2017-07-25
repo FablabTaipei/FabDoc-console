@@ -164,7 +164,7 @@ exports.saveImage = function(imgArray){
 };
 
 // =====================================
-// For Add/Update project ==============
+// For Add/Update/Get project ==============
 // =====================================
 exports.addProject = function(name, user_id, description, license){
 	if(!user_id) return Promise.reject("user_id can not be empty");
@@ -202,3 +202,34 @@ exports.addProject = function(name, user_id, description, license){
 	});
 };
 
+// exports.updateProject
+
+exports.getProjects = function(user_id){
+	if(!user_id) return Promise.reject("user_id can not be empty");
+
+	var db = admin.database();
+	var userRef = db.ref("/user/" + user_id);
+	var projectRef = db.ref("/project");
+
+	return new Promise(function(resolve, reject){
+		userRef.once("value").then(function(snapshot){
+			if(!snapshot.exists()) reject("The user is not exist.");
+			else{
+				let results = [];
+				const userval = snapshot.val();
+				let projectList = JSON.parse( userval.projects || "[]" );
+				Promise.all(
+					projectList.map(function(p_id){ 
+						return new Promise(function(res, rej){
+							projectRef.child(p_id.toString()).once("value").then(function(projectShot){
+								if(projectShot.exists()) results.push(projectShot.val());
+								res();
+							},function(err){rej(err);});
+						});
+					})
+				).then(function(){ resolve(results); }).catch(function(err){ reject(err); });
+			}
+		}).catch(function(err){ reject(err); });
+	});
+
+};
