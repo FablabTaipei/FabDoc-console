@@ -65,8 +65,7 @@ exports.addCommit = function(data){
 			// append machines	// Machines: id, name, description, commit_ids?
 			// append commit
 			var db = admin.database();
-			var rootRef = db.ref();
-			var commitRef = db.ref("commit");
+			var projectCommitRef = db.ref("project/" + data.project_id + "/commits");
 			
 			return new Promise(function(resolve, reject){
 				var resData = {
@@ -80,16 +79,13 @@ exports.addCommit = function(data){
 					image_data: res? JSON.stringify(res) : ""
 				};
 
-				rootRef.child('_tableInfo/commit').transaction(transactionTableInfo,
-					function(error, committed, snapshot) {
-						let currentData = snapshot.val();
-						let currentIndex = currentData._next;
+				var newCommitRef = projectCommitRef.push();
 
-						resData.id = currentIndex;
-						
-						commitRef.child(currentIndex.toString()).set(resData);
-					}
-				).then(function(){ resolve(resData); }).catch(function(err){ reject(err); });
+				resData.id = newCommitRef.key;
+
+				newCommitRef.set(resData)
+					.then(function(){ resolve(resData); })
+					.catch(function(err){ reject(err); });
 			});
 		})
 		.catch(function(err){
@@ -99,7 +95,7 @@ exports.addCommit = function(data){
 };
 
 exports.updateCommit = function(id, data){	
-	if(!id || isNaN(id)) return Promise.reject("id is invalid.");
+	// if(!id || isNaN(id)) return Promise.reject("id is invalid.");
 	var self = this;
 	var validProps = Object.keys(commitSample);
 	var toUpdate = {};
@@ -112,18 +108,19 @@ exports.updateCommit = function(id, data){
 	}
 
 	var db = admin.database();
-	var lookupRef = db.ref("commit/" + id);
+	var projectCommitRef = db.ref("project/" + data.project_id + "/commits/" + id);
+	// var lookupRef = db.ref("commit/" + id);
 
 	return new Promise(function(resolve, reject){
-		lookupRef.once("value")
+		projectCommitRef.once("value")
 			.then(function(snapshot) {
 				if(snapshot.exists()){
 					// do update
-					lookupRef.update(toUpdate).then(function(){ resolve(); }, function(err){ reject(err); });
+					projectCommitRef.update(toUpdate).then(function(){ resolve(); }, function(err){ reject(err); });
 				}else{
 					self.addCommit(data).then(function(result){ resolve(result); }, function(err){ reject(err); });
 				}
-			});
+			}).catch(function(err){ reject(err); });
 	});
 };
 
@@ -162,6 +159,28 @@ exports.saveImage = function(imgArray){
 		Promise.all(promises).then(function(results){ resolve(results); }, function(err){ reject(err); });
 	});
 };
+
+exports.getCommits = function(project_id){
+	if(!project_id) return Promise.reject("project_id can not be empty");
+
+	var db = admin.database();
+	var projectCommitRef = db.ref("project/" + project_id + "/commits");
+
+	return new Promise(function(resolve, reject){
+		projectCommitRef.once("value")
+			.then(function(snapshot) {
+				if(snapshot.exists()){
+					var data = snapshot.val();
+					resolve(
+						Object.keys(data).map(function(key){
+							return data[key];
+						})
+					);
+				}else resolve();
+			})
+			.catch(function(err){ reject(err); });
+	});
+}
 
 // =====================================
 // For Add/Update/Get project ==============

@@ -188,6 +188,18 @@ module.exports = function(app, passport) {
                     }
                 );
         });
+        app.get('/testpush/commits', isLoggedIn, function(req, res, next){
+
+            interface.getCommits(req.session.project || 1)
+                .then(
+                    function(result){
+                        res.status(200).json(result);
+                    },
+                    function(err){
+                        res.status(500).json({error: "Internal server error: " + err});
+                    }
+                );
+        });
     }
     
     // app.get('/console/:type(question|gift|player)', isLoggedIn, function(req, res, next){
