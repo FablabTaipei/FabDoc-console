@@ -103,6 +103,10 @@ body {
     display: block;
 }
 
+.listLabel {
+    display: none;
+}
+
 .form-commit {
     margin-bottom: 40px;
 }
