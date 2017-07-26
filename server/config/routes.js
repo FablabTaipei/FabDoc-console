@@ -115,6 +115,21 @@ module.exports = function(app, passport) {
             );        
     });
 
+    app.get('/project/:id/commits', isLoggedIn, function(req, res, next){
+        var id = req.params.id;
+        if(!id || isNaN(id)) res.status(404);
+        else{
+            interface.getCommits(parseInt(id))
+                .then(
+                    function(results){
+                        // to return 
+                        res.render(path.resolve(__dirname, '../', 'views/commitList.ejs'), { itemsStr: JSON.stringify(results) } ); 
+                    },
+                    function(err){ res.status(500).json({error: "Internal server error: " + err}); }
+                );
+        }
+    });
+
     app.get('/precommit', isLoggedIn, function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
     });

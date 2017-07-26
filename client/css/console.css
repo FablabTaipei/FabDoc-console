@@ -205,7 +205,7 @@ body {
 }
 
 
-.project-item {
+.project-item, .commit-item {
     padding-top: 25px;
     padding-bottom: 25px;
     border-bottom: 0.8px solid #C2C2C2;

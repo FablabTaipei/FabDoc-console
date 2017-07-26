@@ -173,7 +173,11 @@ exports.getCommits = function(project_id){
 					var data = snapshot.val();
 					resolve(
 						Object.keys(data).map(function(key){
-							return data[key];
+							var output = data[key];
+							if(output.image_data) output.image_data = JSON.parse(output.image_data);
+							if(output.components) output.components = JSON.parse(output.components);
+							if(output.machines) output.machines = JSON.parse(output.machines);
+							return output;
 						})
 					);
 				}else resolve();

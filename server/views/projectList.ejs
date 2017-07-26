@@ -21,7 +21,7 @@
                     <li class="row project-item" v-for="item in items">
                         <div class="col-md-8 project-name">
                             <h3>
-                                <a href="/"> {{item.name}} </a>
+                                <a :href="'/project/' + item.id + '/commits'"> {{item.name}} </a>
                             </h3>
                             <p>
                                 {{item.description}}
