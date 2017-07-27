@@ -1,6 +1,7 @@
 var stream = require('stream');
 var admin = require("firebase-admin");
 var utils = require('../utils');
+var md5 = require('md5');
 
 var serviceAccount = require("../config/serviceAccountKey.json");
 
@@ -187,7 +188,7 @@ exports.getCommits = function(project_id){
 }
 
 // =====================================
-// For Add/Update/Get project ==============
+// For Add/Update/Get project ==========
 // =====================================
 exports.addProject = function(name, user_id, description, license){
 	if(!user_id) return Promise.reject("user_id can not be empty");
@@ -254,5 +255,32 @@ exports.getProjects = function(user_id){
 			}
 		}).catch(function(err){ reject(err); });
 	});
-
 };
+
+// =====================================
+// For find/create user ===============
+// =====================================
+exports.findUser = function(user, pass){
+	var db = admin.database();
+	var usernameRef = db.ref("/user/" + user);
+
+	return new Promise(function(resolve, reject){
+		usernameRef.once("value", function(snapshot){
+			if(!snapshot.exists()) reject("The user is not exist.");
+			else{
+				var id = snapshot.val();
+				var userIdRef = db.ref("/user/" + id);
+
+				userIdRef.once("value", function(details){
+					if(!details.exists()) reject("The user is not exist.");
+					else{
+						var data = details.val();
+						if(data.password == md5(pass)) resolve(data);
+						else reject("Password is not match.");
+					}
+				}).catch(function(err){ reject(err); });
+			}
+		}).catch(function(err){ reject(err); });
+	});
+};
+

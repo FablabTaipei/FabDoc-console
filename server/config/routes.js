@@ -17,26 +17,18 @@ var isDev = process.env.NODE_ENV === 'development';
 // var App = require(compiled_app_module_path);
 
 function checkAndUpdateCookie(req, res){
-    var updateCookieValue = utils.getCookie(req),
-    hasExist = !!updateCookieValue;
+    var updateCookieValue = utils.getCookie(req);
 
     if(!updateCookieValue) updateCookieValue = uuid.v4();
 
-    utils.setCookie(res, updateCookieValue, 1000 * 60 * 60 * 3); // 3 hrs
-
-    // return hasExist;
+    utils.setCookie(res, updateCookieValue, 1000 * 60 * 60 * 24); // 24 hrs
 }
 
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
-    function toNext(){
-        // console.log("is auth");
-        checkAndUpdateCookie(req, res);
-        return next();
-    }
     // if user is authenticated in the session, carry on
     // if(process.env.NODE_ENV === 'development' || req.isAuthenticated()) return toNext();
-    if(req.isAuthenticated()) return toNext();
+    if(req.isAuthenticated()) return next();
 
     console.log("return to login");
     // if they aren't redirect them to the home page
@@ -260,7 +252,7 @@ module.exports = function(app, passport) {
         successRedirect : '/', // redirect to the secure profile section
         failureRedirect : '/login', // redirect back to the signup page if there is an error
         failureFlash : false // allow flash messages
-    }));
+    }), checkAndUpdateCookie);
 
     app.get('/logout', function(req, res) {
         req.logout();

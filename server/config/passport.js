@@ -2,14 +2,18 @@
 
 // load all the things we need
 var LocalStrategy   = require('passport-local').Strategy;
+var interface = require('../services/data-interface');
 
-var users = {
-  account: {
-    username: 'account',
-    password: '12345678',
-    id: 1
-  }
-};
+// var users = {
+//   account: {
+//     username: 'account',
+//     password: '12345678',
+//     id: 1
+//   }
+// };
+
+// check login user: https://gist.github.com/manjeshpv/84446e6aa5b3689e8b84
+// https://github.com/manjeshpv/node-express-passport-mysql
 
 // expose this function to our app using module.exports
 module.exports = function(passport) {
@@ -63,18 +67,13 @@ module.exports = function(passport) {
         //     return done(null, user);
         // });
 
-        user = users[ username ];
- 
-        if ( user == null ) {
-          return done( null, false, { message: 'Invalid user' } );
-        };
-   
-        if ( user.password !== password ) {
-          return done( null, false, { message: 'Invalid password' } );
-        };
-   
-        console.log("login user:" + user);
-        done( null, user );
+        interface.findUser(username, password).then(
+            function(user){
+                console.log("login user:" + user);
+                done( null, user );
+            },
+            function(err){ return done( null, false, { message: err } ); }
+        );
 
     }));
 }; 
