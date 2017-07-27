@@ -130,6 +130,26 @@ module.exports = function(app, passport) {
         }
     });
 
+    app.post('/project/:id/commits', isLoggedIn, function(req, res, next){
+        var userId = req.user;
+        var id = req.params.id;
+        if(!id || isNaN(id)) res.status(404);
+        else{
+            var formbody = req.body;
+            var items = formbody.items;
+            
+            Promise.all(
+                items.map(function(commit){
+                    commit.project_id = id;
+                    commit.user_id = userId;
+                    return interface.addCommit(commit);
+                })
+            )
+            .then(function(){ res.status(200).json({ status: "OK" }); })
+            .catch(function(err){ res.status(500).json({error: "Internal server error: " + err}); });
+        }
+    });
+
     app.get('/precommit', isLoggedIn, function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
     });
