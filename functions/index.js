@@ -65,3 +65,15 @@ exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
 		}
 	});
 
+exports.addCommitTimeStamp = functions.database.ref('/project/{projectId}/commits/{commitId}')
+	.onCreate(event => {
+		let projectId = event.params.projectId;
+		let commitId = event.params.commitId;
+		let data = event.data;
+		let original = data.val();
+
+		original["created_at"] = (new Date()).toGMTString();
+
+		return data.ref.update(original);
+	});
+

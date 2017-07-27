@@ -61,12 +61,14 @@ exports.addCommit = function(data){
 	// if(image && typeof image == "string") image = JSON.parse(image);
 	if(machines && typeof machines != "string") machines = JSON.stringify(machines);
 
+	var db = admin.database();
+	var projectCommitRef = db.ref("project/" + data.project_id + "/commits");
+	var newCommitRef = projectCommitRef.push();
+
 	return (image? self.saveImage(image) : Promise.resolve())
 		.then(function(res){
 			// append machines	// Machines: id, name, description, commit_ids?
 			// append commit
-			var db = admin.database();
-			var projectCommitRef = db.ref("project/" + data.project_id + "/commits");
 			
 			return new Promise(function(resolve, reject){
 				var resData = {
@@ -79,8 +81,6 @@ exports.addCommit = function(data){
 					note: note,
 					image_data: res? JSON.stringify(res) : ""
 				};
-
-				var newCommitRef = projectCommitRef.push();
 
 				resData.id = newCommitRef.key;
 
@@ -173,7 +173,7 @@ exports.getCommits = function(project_id){
 				if(snapshot.exists()){
 					var data = snapshot.val();
 					resolve(
-						Object.keys(data).map(function(key){
+						Object.keys(data).reverse().map(function(key){
 							var output = data[key];
 							if(output.image_data) output.image_data = JSON.parse(output.image_data);
 							if(output.components) output.components = JSON.parse(output.components);
