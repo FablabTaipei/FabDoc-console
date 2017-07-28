@@ -16,31 +16,57 @@
     </header>
 
     <main>
-        <div class="container">
-            <div id='qrcode-view'>
-                <div class="col-md-6 col-md-offset-3">
-                    <h3>Connect to your device</h3>
-                    <p>
-                        Turn on the Raspberry Pi installed FabDoc-RPi-client script, and scan the QR code with camera module.
-                    </p>
-                    <canvas class="qrcode" id="qrcode"></canvas>
-                    <div class="alert alert-info" role="alert">
-                        <span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span> If you succeed, the page will start to capture snapshot as <strong>precommit</strong>.
+        <div class="modal" tabindex="-1" id="qrcode-modal" role="dialog" data-backdrop="false" data-keyboard="false">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div id='qrcode-view'>
+                            <div class="modal-header">
+                                <h3 class="modal-title">Connect to your device</h3>
+                            </div>
+                            <div class="modal-body">
+                                <p>
+                                    Turn on the Raspberry Pi installed FabDoc-RPi-client script, and scan the QR code with camera module.
+                                </p>
+                                <canvas class="qrcode" id="qrcode"></canvas>
+                                <div class="alert alert-info" role="alert">
+                                    <span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span> If you succeed, the page will start to capture snapshot as <strong>precommit</strong>.
+                                </div>
+                            </div>
+                            <div class="modal-footer hide">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- <div class="well">
-            <button class="btn btn-default" onclick="preCommitBtnClick(this);">Start Pre-Commit</button>
-            <p>Token: <span class="token"></span><canvas id="canvas"></canvas></p>
-            <p>Status: <span class="status"></span></p>
-        </div> -->
-            <div id='precommit-view'>
-                <div class="col-xs-12 btn-push" v-cloak>
-                    <button class="btn btn-success pull-right" type="button">
-                Push <span class="badge"> {{ commitQueue }} </span>
-                </button>
+        </div>
+        <div class="modal" tabindex="-1" id="connected-modal" role="dialog" data-show="false">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div id='qrcode-view'>
+                            <div class="modal-header">
+                                <h3 class="modal-title">Success!</h3>
+                            </div>
+                            <div class="modal-body">
+                                <p>
+                                    Now feel free to leave your computer. All the process is being recorded here. <strong>Happy making!</strong>
+                                </p>
+                            </div>
+                            <div class="modal-footer hide">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="row">
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- <div class="alert alert-success" id="conneted-alert" role="alert">
+                <a>Connected! Receiving <strong>prcommit</strong> from your device.</a>
+            </div> -->
+            <div>
+                <div class="row" id="precommit-view">
                     <div class="col-md-8">
                         <div class="img-view"><img id="editor" src="" path="" /></div>
                         <div class="frame">
@@ -52,18 +78,23 @@
                         </div>
                     </div>
                     <div class="col-md-4">
+                        <div class="col-xs-12 btn-push" v-cloak>
+                            <button class="btn btn-success pull-right" type="button">
+                            Push <span class="badge"> {{ commitQueue }} </span>
+                            </button>
+                        </div>
                         <form>
                             <h5><strong>Commit</strong></h5>
                             <div class="form-group form-commit">
                                 <label for="inputCommit" class="sr-only">Commit</label>
-                                <input type="text" class="form-control" id="inputCommit">
+                                <input type="text" class="form-control" id="inputCommit" v-model="message">
                             </div>
                             <h5><strong>Components</strong></h5>
                             <div class="form-group">
                                 <div class="row">
                                     <div class="col-xs-4">
                                         <label for="inputAmount" class="sr-only">Amount</label>
-                                        <input type="number" class="form-control text-center" id="inputAmount" placeholder="quantity" />
+                                        <input type="number" class="form-control text-center" id="inputAmount" v-model="newComponentAmount" placeholder="quantity" @keyup.enter="addComponent" />
                                     </div>
                                     <div class="col-xs-1">
                                         <p class="form-control-static text-center"> x </p>
@@ -71,44 +102,52 @@
                                     <div class="col-xs-7">
                                         <label for="inputComponents" class="sr-only">Components</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="inputComponents" placeholder="name" />
+                                            <input type="text" class="form-control" id="inputComponents" v-model="newComponentName" placeholder="name" @keyup.enter="addComponent" />
                                             <span class="input-group-btn">
-                                        <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                                                <button type="button" @click="addComponent" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
                                             </span>
                                         </div>
                                     </div>
+                                    <ul class="component-list list-unstyled" v-cloak>
+                                        <li v-for="component in components" class="component" :key="component.id">
+                                            <div class="col-xs-4">
+                                                <label class="listLabel">{{ component.amount }}</label>
+                                                <input class="form-control text-center" type="number" v-model="component.amount" readonly/>
+                                            </div>
+                                            <div class="col-xs-1">
+                                                <p class="form-control-static text-center"> x </p>
+                                            </div>
+                                            <div class="col-xs-7">
+                                                <label class="listLabel text-center">{{ component.name }}</label>
+                                                <div class="input-group">
+                                                    <input class="form-control" type="text" v-model="component.name" readonly/>
+                                                    <span class="input-group-btn">
+                                                    <button type="button" class="remove btn btn-link" @click="removeComponent(component)"><span class="glyphicon glyphicon-minus"></span></button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
                                 </div>
-                                <ul class="component-list" v-cloak>
-                                    <li v-for="component in components" class="component" :key="component.id" :class="{ editing: component == editedComp }">
-                                        <div class="col-xs-4">
-                                            <label @dbclick="editComp(component)">{{ component.amount }}</label>
-                                            <input class="form-control edit" type="number" v-model="component.amount" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
-                                        </div>
-                                        <div class="col-xs-1">
-                                            <p class="form-control-static text-center"> x </p>
-                                        </div>
-                                        <div class="col-xs-7">
-                                            <label class="text-center" @dbclick="editComp(component)">{{ component.name }}</label>
-                                            <input class="form-control edit" type="text" v-model="component.name" v-component-focus=" component == editedComp" @blur="doneEdit(component)" @keyup.enter="doneEdit(component)" @keyup.esc="cancelEdit(component)" />
-                                            <button class="remove" @click="removeComp(component)"></button>
-                                        </div>
-                                    </li>
-                                </ul>
                             </div>
                             <h5><strong>Machines</strong></h5>
                             <div class="form-group has-feedback">
                                 <label for="inputMachines" class="sr-only">Machines</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="inputMachines" />
+                                    <input type="text" class="form-control" id="inputMachines" v-model="newMachine" @keyup.enter="addMachine" />
                                     <span class="input-group-btn">
-                                <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                                        <button type="button" @click="addMachine" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
                                     </span>
                                 </div>
-                                <ul class="machine-list" v-cloak>
-                                    <li v-for="machine in machines" class="machine" :key="machine.id" :class="{ editing: machine == editedMachine }">
-                                        <label @dbclick="editMachine(machine)">{{ machine.name }}</label>
-                                        <input class="form-control edit" type="text" v-model="machine.name" v-machine-focus=" machine == editedMachine" @blur="doneEdit(machine)" @keyup.enter="doneEdit(machine)" @keyup.esc="cancelEdit(machine)" />
-                                        <button class="remove" @click="removeMachine(machine)"></button>
+                                <ul class="machine-list list-unstyled" v-cloak>
+                                    <li v-for="machine in machines" class="machine" :key="machine.id">
+                                        <label class="listLabel">{{ machine.name }}</label>
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" v-model="machine.name" readonly/>
+                                            <span class="input-group-btn">
+                                                <button type="button" @click="removeMachine(machine)"  class="remove btn btn-link"><span class="glyphicon glyphicon-minus"></span></button>
+                                            </span>
+                                        </div>
                                     </li>
                                 </ul>
                             </div>
@@ -117,32 +156,35 @@
                                 <label for="inputRepository" class="sr-only">Repository</label>
                                 <div class="input-group">
                                     <span class="input-group-addon"><span class="glyphicon glyphicon-link"></span></span>
-                                    <input type="text" class="form-control" id="inputRepository" />
+                                    <input type="text" class="form-control" id="inputRepository" v-model="newRepo" @keyup.enter="addRepo" />
                                     <span class="input-group-btn">
-                                <button type="submit" class="btn btn-default" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+                                        <button type="button" @click="addRepo" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
                                     </span>
                                 </div>
-                                <ul class="repo-list" v-cloak>
-                                    <li v-for="repo in repos" class="repo" :key="repo.id" :class="{ editing: repo == editedRepo }">
-                                        <label @dbclick="editRepo(repo)">{{ repo.name }}</label>
-                                        <input class="form-control edit" type="text" v-model="repo.name" v-repo-focus=" repo == editedRepo" @blur="doneEdit(repo)" @keyup.enter="doneEdit(repo)" @keyup.esc="cancelEdit(repo)" />
-                                        <button class="remove" @click="removeRepo(repo)"></button>
+                                <ul class="repo-list list-unstyled" v-cloak>
+                                    <li v-for="repo in repos" class="repo" :key="repo.id">
+                                        <label class="listLabel">{{ repo.name }}</label>
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" v-model="repo.name" readonly/>
+                                            <span class="input-group-btn">
+                                                <button type="button" @click="removeRepo(repo)"  class="remove btn btn-link"><span class="glyphicon glyphicon-minus"></span></button>
+                                            </span>
+                                        </div>
                                     </li>
                                 </ul>
                             </div>
                             <h5><strong>Note</strong></h5>
                             <div class="form-group form-note">
                                 <label for="inputNote" class="sr-only">Note</label>
-                                <textarea class="form-control" id="inputNote"></textarea>
+                                <textarea class="form-control" id="inputNote" v-model="note"></textarea>
                             </div>
                         </form>
+                        <button type="button" class="btn btn-primary pull-right btn-save" @click="saveCommit">Commit</button>
+                        <button type="button" class="btn btn-default pull-right" @click="removeCommit">Uncommit</button>
                     </div>
-                    <button type="submit" class="btn btn-primary pull-right btn-save">Save</button>
-                    <button type="submit" class="btn btn-default pull-right">Uncommit</button>
                 </div>
             </div>
         </div>
-
     </main>
 
     <footer>
@@ -150,27 +192,225 @@
     </footer>
 
     <script type="text/javascript">
-        var tag_editor_options = {
-            initAreas: [{
-                "width ": 500,
-                "height ": 500
-            }],
-            deleteMethod: 'click',
-            area: {
-                strokeStyle: '#E5E8E8',
-                lineWidth: 1
-            },
-            point: {
-                size: 0,
-                fillStyle: 'black'
-            },
-        };
+        // var tag_editor_options = {
+        //     initAreas: [{
+        //         "width ": 500,
+        //         "height ": 500
+        //     }],
+        //     deleteMethod: 'click',
+        //     area: {
+        //         strokeStyle: '#E5E8E8',
+        //         lineWidth: 1
+        //     },
+        //     point: {
+        //         size: 0,
+        //         fillStyle: 'black'
+        //     },
+        // };
+        //
+        // // Setup a canvas to tag materials on pre-commit pictures
+        // $('#editor').areaSelect(tag_editor_options);
+        //
+        // $('#editor').areaSelect('bindChangeEvent', function(event, data) {
+        //     console.log(data.areas);
+        // });
 
-        // Setup a canvas to tag materials on pre-commit pictures
-        $('#editor').areaSelect(tag_editor_options);
+        // $(o).prop("disabled ", true);
 
-        $('#editor').areaSelect('bindChangeEvent', function(event, data) {
-            console.log(data.areas);
+        socketInstance = io.connect();
+        socketInstance.on('connect', function(msg) {
+            console.log("Browser Connected. ");
+        });
+        socketInstance.on('pass_token', function(data) {
+            qrcodelib.toCanvas($('#qrcode')[0], data.token, function(error) {
+                if (error) console.error(error)
+                console.log('QR code generated!');
+            });
+        });
+        socketInstance.on('pass_compressed_image', function(data) {
+            var image = '<li>' + '<input type="checkbox" id="pr' +
+                frame.items.length + '" /><label for="pr' + frame.items.length + '" class="img-label" id="li' + frame.items.length + '"><img id="item-' +
+                frame.items.length + '" src="data: ' + data.type + ';base64,' +
+                data.base64 + '" path="' + data.filepath + '"/></label>' + '</li>';
+            frame.add(image);
+            frame.activate(frame.items.length - 1);
+        });
+        socketInstance.on('connected_with_device', function(data) {
+            console.log('Connected with device!');
+            $('#qrcode-modal').modal('hide');
+            $('body').css('overflow', 'scroll');
+            $('#connected-modal').modal('show');
+
+            $('#connected-alert').show();
+        });
+
+        var STORAGE_KEY = 'local-commit';
+
+        var commitLocalStorage = {
+            fetch: function() {
+                var commits = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+                commits.forEach(function(commit, index) {
+                    // var id = commit.id;
+                    // $('#pr' + id).prop('checked', true);
+                    // $('#pr' + id).prop('disabled', true);
+                    // $('#li' + id).css("background-color", "#428BCA");
+                    // commit.id = index;
+                    // commit.machine = {}
+                });
+                return commits;
+            },
+            save: function(commits) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(commits));
+            }
+        }
+
+        var app = new Vue({
+            el: '#precommit-view',
+
+            data: {
+                currentIndex: '',
+                commits: commitLocalStorage.fetch(),
+                message: '',
+                components: [],
+                machines: [],
+                repos: [],
+                note: '',
+                newComponentAmount: '',
+                newComponentName: '',
+                newMachine: '',
+                newRepo: '',
+            },
+
+            watch: {
+                currentIndex: function(val, oldVal) {
+                    this.retrieveCommit(val);
+                },
+                commits: {
+                    handler: function(commits) {
+                        commitLocalStorage.save(commits);
+                    },
+                    deep: true
+                },
+            },
+
+            computed: {
+                commitQueue: function() {
+                    return this.commits.length;
+                }
+            },
+
+            methods: {
+                imageSelectedToggle: function() {
+                    console.log("test");
+                },
+                saveCommit: function() {
+                    if (this.currentIndex === '') return;
+                    var id = this.currentIndex;
+                    var currentCommit = this.commits.filter(function(commit) {
+                        return commit.id === id;
+                    })[0];
+                    if (currentCommit) {
+                        console.log("Have already committed human!");
+                        return;
+                    };
+                    this.addComponent();
+                    this.addMachine();
+                    this.addRepo();
+                    this.commits.push({
+                        id: this.currentIndex,
+                        message: this.message,
+                        components: this.components,
+                        machines: this.machines,
+                        repos: this.repos,
+                        note: this.note
+                    });
+                    $('#pr' + id).prop('checked', true);
+                    $('#pr' + id).prop('disabled', true);
+                    $('#li' + id).css("background-color", "#428BCA");
+                },
+                retrieveCommit: function(id) {
+                    var currentCommit = this
+                        .commits.filter(function(commit) {
+                            return commit.id === id;
+                        })[0];
+                    if (currentCommit) {
+                        this.message = currentCommit.message;
+                        this.components = currentCommit.components;
+                        this.machines = currentCommit.machines;
+                        this.repos = currentCommit.repos;
+                        this.note = currentCommit.note;
+                    } else {
+                        this.message = '';
+                        this.components = [];
+                        this.machines = [];
+                        this.repos = [];
+                        this.note = '';
+                    }
+                },
+                removeCommit: function() {
+                    var id = this.currentIndex;
+                    var currentCommit = this.commits.filter(function(commit) {
+                        return commit.id === id;
+                    })[0];
+                    var index = this.commits.indexOf(currentCommit);
+                    if (index == -1) return;
+                    this.commits.splice(index, 1);
+                    this.message = '';
+                    this.components = [];
+                    this.machines = [];
+                    this.repos = [];
+                    this.note = '';
+                    $('#pr' + id).prop('checked', false);
+                    $('#pr' + id).prop('disabled', false);
+                    $('#li' + id).css("background-color", "white");
+                },
+
+                addComponent: function() {
+                    var amount = this.newComponentAmount && this.newComponentAmount.trim()
+                    var name = this.newComponentName && this.newComponentName.trim()
+                    if (!amount || !name) {
+                        return
+                    }
+                    this.components.push({
+                        id: this.components.length,
+                        amount: amount,
+                        name: name,
+                    })
+                    this.newComponentAmount = '';
+                    this.newComponentName = '';
+                },
+                addMachine: function() {
+                    var name = this.newMachine && this.newMachine.trim()
+                    if (!name) {
+                        return
+                    }
+                    this.machines.push({
+                        id: this.machines.length,
+                        name: name,
+                    })
+                    this.newMachine = '';
+                },
+                addRepo: function() {
+                    var name = this.newRepo && this.newRepo.trim()
+                    if (!name) {
+                        return
+                    }
+                    this.repos.push({
+                        id: this.repos.length,
+                        name: name,
+                    })
+                    this.newRepo = '';
+                },
+                removeComponent: function(component) {
+                    this.components.splice(this.components.indexOf(component), 1)
+                },
+                removeMachine: function(machine) {
+                    this.machines.splice(this.machines.indexOf(machine), 1)
+                },
+                removeRepo: function(repo) {
+                    this.repos.splice(this.repos.indexOf(repo), 1)
+                },
+            }
         });
 
         var frame_options = {
@@ -192,12 +432,13 @@
             elasticBounds: 1
         };
 
-        var frame = new Sly('.frame', frame_options)
+        var frame = new Sly('.frame', frame_options);
 
-        frame.on('active', function(e, i) {
+        frame.on('active', function(e, index) {
             // Show clicked activated image into preview editor
-            var activeEl = $('#item-' + i);
-            $("#editor ")
+            app.currentIndex = index;
+            var activeEl = $('#item-' + index);
+            $("#editor")
                 .attr('src', activeEl.attr('src'))
                 .attr('path', activeEl.attr('path'));
         });
@@ -208,102 +449,7 @@
             $('.frame').sly('reload');
         });
 
-        // $(o).prop("disabled ", true);
-
-        socketInstance = io.connect();
-        socketInstance.on('connect', function(msg) {
-            console.log("Browser Connected. ");
-        });
-        socketInstance.on('pass_token', function(data) {
-            qrcodelib.toCanvas($('#qrcode')[0], data.token, function(error) {
-                if (error) console.error(error)
-                console.log('QR code generated!');
-            });
-        });
-        socketInstance.on('pass_compressed_image', function(data) {
-            var image = '<li>' + '<input type="checkbox " id="pr ' +
-                frame.items.length + ' " /><label for="pr ' + frame.items.length + ' " class="img-label "><img id="item- ' +
-                frame.items.length + ' " src="data: ' + data.type + ';base64, ' +
-                data.base64 + ' " path=" ' + data.filepath + ' "/></label>' + '</li>';
-            frame.add(image);
-            frame.activate(frame.items.length - 1);
-        });
-        // var app = new Vue({
-        //     el: '.container',
-        //     data: {
-        //         // commits: storage.fetch(),
-        //         // components: storage.fetch(),
-        //         // machines: ,
-        //         // repos: ,
-        //         // editedComp: null,
-        //         // editedMachine: null,
-        //         // editedRepo: null,
-        //         qrcodeDisplay: true,
-        //     },
-        //
-        //     watch: {
-        //         commits: {
-        //             handler: function(commits) {
-        //                 storage.save(commits)
-        //             },
-        //             deep: true
-        //         },
-        //         components: {
-        //             handler: function(components) {
-        //                 storage.save(components)
-        //             },
-        //             deep: true
-        //         },
-        //         machines: {
-        //             handler: function(machines) {
-        //                 storage.save(machines)
-        //             },
-        //             deep: true
-        //         },
-        //         repos: {
-        //             handler: function(repos) {
-        //                 storage.save(repos)
-        //             },
-        //             deep: true
-        //         },
-        //     },
-        //
-        //     computed: {
-        //         commitQueue: function() {
-        //             return
-        //         }
-        //     },
-        //
-        //     methods: {
-        //         addCommit: function() {
-        //
-        //         },
-        //         removeCommit: function() {
-        //
-        //         },
-        //         editObject: function(object) {
-        //
-        //         },
-        //     },
-        //
-        //     directives: {
-        //         // 'component-focus': function(el, binding) {
-        //         //     if (binding.value) {
-        //         //         el.focus()
-        //         //     }
-        //         // },
-        //         // 'machine-focus': function(el, binding) {
-        //         //     if (binding.value) {
-        //         //         el.focus()
-        //         //     }
-        //         // },
-        //         // 'repo-focus': function(el, binding) {
-        //         //     if (binding.value) {
-        //         //         el.focus()
-        //         //     }
-        //         // }
-        //     }
-        // });
+        $("#qrcode-modal").modal('show');
     </script>
 </body>
 

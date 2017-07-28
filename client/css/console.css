@@ -4,7 +4,7 @@ body {
     background-color: #FAF9F9;
 }
 
-/*[v-cloak] {display: none}*/
+[v-cloak] {display: none}
 
 .form-signin, .form-signup {
     max-width: 330px;
@@ -109,6 +109,10 @@ body {
     display: block;
 }
 
+.listLabel {
+    display: none;
+}
+
 .form-commit {
     margin-bottom: 40px;
 }
@@ -149,7 +153,7 @@ body {
     display: none;
 }
 
-.img-label:before {
+/*.img-label:before {
     background-color: white;
     color: white;
     content: "✓";
@@ -164,10 +168,10 @@ body {
     line-height: 28px;
     transition-duration: 0.4s;
     transform: scale(0);
-}
+}*/
 
 .img-label {
-    height: 92%;
+    height: 93%;
     border: 1px solid #fff;
     display: block;
     position: relative;
@@ -180,14 +184,14 @@ body {
     transform-origin: 50% 50%;
 }
 
-:checked+.img-label {
-    border-color: #ddd;
-}
-
-:checked+.img-label:before {
+/*:checked+.img-label:before {
     content: "✓";
     background-color: #428BCA;
     transform: scale(1);
+}*/
+
+:checked+.img-label {
+    border-color: #ddd;
 }
 
 :checked+.img-label img {
