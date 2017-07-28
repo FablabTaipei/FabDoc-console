@@ -85,7 +85,7 @@ module.exports = function(app, passport) {
                 function(result){
                     req.session.project = parseInt(result.id);
                     // console.log(result);
-                    res.redirect('/precommit')
+                    res.redirect('/project/' + result.id + '/precommit');
                     // res.status(200).send("OK");
                 },
                 function(err){
@@ -102,6 +102,11 @@ module.exports = function(app, passport) {
                 },
                 function(err){ res.status(500).json({error: "Internal server error: " + err}); }
             );        
+
+    });
+
+    app.get('/project/:id/precommit', isLoggedIn, function (req, res, next) {
+        res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'), { project: req.params.id });
     });
 
     app.get('/project/:id/commits', isLoggedIn, function(req, res, next){
