@@ -79,7 +79,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="col-xs-12 btn-push" v-cloak>
-                            <button class="btn btn-success pull-right" type="button">
+                            <button class="btn btn-success pull-right" type="button" @click="pushCommits">
                             Push <span class="badge"> {{ commitQueue }} </span>
                             </button>
                         </div>
@@ -322,7 +322,12 @@
                         components: this.components,
                         machines: this.machines,
                         repos: this.repos,
-                        note: this.note
+                        note: this.note,
+                        image: {
+                            filename: $('#item-' + id).attr('path').split('/').pop(),
+                            base64String: $('#item-' + id).attr('src').split(',')[1],
+                            mediaType: $('#item-' + id).attr('src').split(':')[1].split(';')[0],
+                        },
                     });
                     $('#pr' + id).prop('checked', true);
                     $('#pr' + id).prop('disabled', true);
@@ -363,6 +368,26 @@
                     $('#pr' + id).prop('checked', false);
                     $('#pr' + id).prop('disabled', false);
                     $('#li' + id).css("background-color", "white");
+                },
+                pushCommits: function() {
+                    var sData = JSON.stringify(this.commits);
+                    $.ajax({
+                        url: '/project/:id/commits',
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        data: sData,
+                        success: function(response) {
+                            if (response.status == "OK") {
+                                // OK
+                            } else {
+                                console.log(response.error);
+                            }
+                        },
+                        error: function(response) {
+                            console.log(response);
+                        }
+                    });
                 },
 
                 addComponent: function() {
