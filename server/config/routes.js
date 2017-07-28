@@ -97,11 +97,11 @@ module.exports = function(app, passport) {
     app.get('/projects', isLoggedIn, function (req, res, next) {
         interface.getProjects(req.user)
             .then(
-                function(results){ 
-                    res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'), { itemsStr: JSON.stringify(results) } ); 
+                function(results){
+                    res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'), { itemsStr: JSON.stringify(results) } );
                 },
                 function(err){ res.status(500).json({error: "Internal server error: " + err}); }
-            );        
+            );
 
     });
 
@@ -116,8 +116,8 @@ module.exports = function(app, passport) {
             interface.getCommits(parseInt(id))
                 .then(
                     function(results){
-                        // to return 
-                        res.render(path.resolve(__dirname, '../', 'views/commitList.ejs'), { itemsStr: JSON.stringify(results) } ); 
+                        // to return
+                        res.render(path.resolve(__dirname, '../', 'views/commitList.ejs'), { itemsStr: JSON.stringify(results) } );
                     },
                     function(err){ res.status(500).json({error: "Internal server error: " + err}); }
                 );
@@ -129,9 +129,8 @@ module.exports = function(app, passport) {
         var id = req.params.id;
         if(!id || isNaN(id)) res.status(404);
         else{
-            var formbody = req.body;
-            var items = formbody.items;
-            
+            var items = req.body;
+
             Promise.all(
                 items.map(function(commit){
                     commit.project_id = id;
@@ -144,9 +143,9 @@ module.exports = function(app, passport) {
         }
     });
 
-    app.get('/precommit', isLoggedIn, function (req, res, next) {
-        res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
-    });
+    // app.get('/precommit', isLoggedIn, function (req, res, next) {
+    //     res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
+    // });
 
     app.post('/addcommit', isLoggedIn, function(req, res, next){
         var userId = req.user;
@@ -163,8 +162,8 @@ module.exports = function(app, passport) {
         // =====================================
         app.get('/testpush', isLoggedIn, function (req, res, next) {
             req.session.project = 1;
-            res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'), 
-                { 
+            res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'),
+                {
                     base64: utils.base64_encode( path.resolve(__dirname, '../../', 'client/images/flower.jpg') ),
                     filename: "flower.jpg",
                     type: "image/jpg"
@@ -230,7 +229,7 @@ module.exports = function(app, passport) {
                 );
         });
     }
-    
+
     // app.get('/console/:type(question|gift|player)', isLoggedIn, function(req, res, next){
     //   var type = req.params.type;
     //   var convertType = type[0].toUpperCase() + type.slice(1);

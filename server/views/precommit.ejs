@@ -372,8 +372,12 @@
                 },
                 pushCommits: function() {
                     var sData = JSON.stringify(this.commits);
+                    console.log("testpush");
+                    var url = $(location).attr('pathname').split('/');
+                    var id = url[url.length - 2];
+                    console.log(id);
                     $.ajax({
-                        url: '/project/:id/commits',
+                        url: '/project/' + id + '/commits',
                         type: 'POST',
                         dataType: 'json',
                         contentType: 'application/json; charset=utf-8',
