@@ -16,9 +16,9 @@ var isDev = process.env.NODE_ENV === 'development';
 // var App = require(compiled_app_module_path);
 
 // route middleware to make sure a user is logged in
-function isLoggedIn(req, res, next) {
+function loginRequired(req, res, next) {
     // if user is authenticated in the session, carry on
-    // if(process.env.NODE_ENV === 'development' || req.isAuthenticated()) return toNext();
+    // if(process.env.NODE_ENV === 'development' || req.isAuthenticated()) return toNext();    
     if(req.isAuthenticated()) return next();
 
     console.log("return to login");
@@ -56,7 +56,7 @@ module.exports = function(app, passport) {
     // =====================================
     // CONSOLE =============================
     // =====================================
-    app.get('/', isLoggedIn, function (req, res, next) {
+    app.get('/', function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/index.ejs'));
     });
     // show the login form
@@ -71,12 +71,12 @@ module.exports = function(app, passport) {
     });
 
 
-    app.get('/create/project', isLoggedIn, function (req, res, next) {
+    app.get('/create/project', loginRequired, function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/createProject.ejs'));
         // req.session.project = 1;
     });
 
-    app.post('/create/project/add', isLoggedIn, function(req, res, next){
+    app.post('/create/project/add', loginRequired, function(req, res, next){
         var formbody = req.body;
         var userId = req.user;
 
@@ -94,22 +94,11 @@ module.exports = function(app, passport) {
             );
     });
 
-    app.get('/projects', isLoggedIn, function (req, res, next) {
-        interface.getProjects(req.user)
-            .then(
-                function(results){ 
-                    res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'), { itemsStr: JSON.stringify(results) } ); 
-                },
-                function(err){ res.status(500).json({error: "Internal server error: " + err}); }
-            );        
-
-    });
-
-    app.get('/project/:id/precommit', isLoggedIn, function (req, res, next) {
+    app.get('/project/:id/precommit', loginRequired, function (req, res, next) {
         res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'), { project: req.params.id });
     });
 
-    app.get('/project/:id/commits', isLoggedIn, function(req, res, next){
+    app.get('/project/:id/commits', function(req, res, next){
         var id = req.params.id;
         if(!id || isNaN(id)) res.status(404);
         else{
@@ -124,7 +113,7 @@ module.exports = function(app, passport) {
         }
     });
 
-    app.post('/project/:id/commits', isLoggedIn, function(req, res, next){
+    app.post('/project/:id/commits', loginRequired, function(req, res, next){
         var userId = req.user;
         var id = req.params.id;
         if(!id || isNaN(id)) res.status(404);
@@ -144,24 +133,43 @@ module.exports = function(app, passport) {
         }
     });
 
-    app.get('/precommit', isLoggedIn, function (req, res, next) {
-        res.render(path.resolve(__dirname, '../', 'views/precommit.ejs'));
+    app.get('/projects', function (req, res, next) {
+        res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'), { getUrl: '/projects/json' } ); 
     });
 
-    app.post('/addcommit', isLoggedIn, function(req, res, next){
-        var userId = req.user;
-        var projectId = req.session.project;
-        if(projectId && user){
-            // ...
-        }
+    app.get('/projects/json', function (req, res, next) {
+        var idx = req.query.idx;
+        var len = req.query.len;
+        interface.getAllProjects(idx, len)
+            .then(
+                function(results){
+                    res.status(200).json({ items: results });
+                },
+                function(err){ res.status(500).json({error: "Internal server error: " + err}); }
+            );
     });
 
+    app.get('/user/projects', loginRequired, function (req, res, next) {
+        res.render(path.resolve(__dirname, '../', 'views/projectList.ejs'), { getUrl: '/user/projects/json' } ); 
+    });
+
+    app.get('/user/projects/json', loginRequired, function (req, res, next) {
+        var idx = req.query.idx;
+        var len = req.query.len;
+        interface.getUserProjects(req.user, idx, len)
+            .then(
+                function(results){
+                    res.status(200).json({ items: results });
+                },
+                function(err){ res.status(500).json({error: "Internal server error: " + err}); }
+            );
+    });
 
     if(isDev){
         // =====================================
         // TEST FIREBASE =======================
         // =====================================
-        app.get('/testpush', isLoggedIn, function (req, res, next) {
+        app.get('/testpush', loginRequired, function (req, res, next) {
             req.session.project = 1;
             res.render(path.resolve(__dirname, '../', 'views/testpush.ejs'), 
                 { 
@@ -171,7 +179,7 @@ module.exports = function(app, passport) {
                 }
             );
         });
-        app.post('/testpush/commit/add', isLoggedIn, function (req, res, next) {
+        app.post('/testpush/commit/add', loginRequired, function (req, res, next) {
             var projectId = req.session.project || 1;
             var userId = req.user;
             var formbody = req.body;
@@ -202,7 +210,7 @@ module.exports = function(app, passport) {
             });
 
         });
-        app.post('/testpush/project/add', isLoggedIn, function(req, res, next){
+        app.post('/testpush/project/add', loginRequired, function(req, res, next){
             var formbody = req.body;
             var userId = req.user;
 
@@ -217,7 +225,7 @@ module.exports = function(app, passport) {
                     }
                 );
         });
-        app.get('/testpush/commits', isLoggedIn, function(req, res, next){
+        app.get('/testpush/commits', loginRequired, function(req, res, next){
 
             interface.getCommits(req.session.project || 1)
                 .then(
@@ -230,24 +238,6 @@ module.exports = function(app, passport) {
                 );
         });
     }
-    
-    // app.get('/console/:type(question|gift|player)', isLoggedIn, function(req, res, next){
-    //   var type = req.params.type;
-    //   var convertType = type[0].toUpperCase() + type.slice(1);
-    //   service['get' + convertType]().then(function(results){
-    //     var data = {};
-    //     data[type] = results;
-    //     res.render(path.resolve(__dirname, '../', 'views/console/' + type + '.ejs'), data );
-    //   });
-    // });
-
-    // CRUD
-    // app.post('/console/:type(question|gift|player)/:action(add|update|remove)', isLoggedIn, function(req, res, next){
-    //   var type = req.params.type;
-    //   var action = req.params.action;
-    //   convertType = type[0].toUpperCase() + type.slice(1);
-    //   service[action + convertType](req.body).then(function(){ res.redirect('/console/' + type); });
-    // });
 
     // process the login form
     app.post('/login', passport.authenticate('local-login', {
@@ -266,7 +256,5 @@ module.exports = function(app, passport) {
         req.logout();
         res.redirect('/');
     });
-
-
 
 };

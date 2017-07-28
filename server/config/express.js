@@ -58,7 +58,12 @@ module.exports = function (app, passport) {
   app.use(methodOverride());
   app.use(express.static(path.join(__dirname, '../..', 'public')));
  
-  
+  // common ejs properties
+  app.use(function(req, res, next){
+    res.locals.isDev = !isProduction;
+    res.locals.login = req.isAuthenticated();
+    next();
+  }); 
 
   // I am adding this here so that the Heroku deploy will work
   // Indicates the app is behind a front-facing proxy,

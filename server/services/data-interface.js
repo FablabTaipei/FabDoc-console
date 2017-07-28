@@ -31,6 +31,20 @@ var transactionTableInfo = function(currentData){
 	else return { _count: currentData._count + 1, _next: currentData._next + 1 };
 }
 
+var _parse = JSON.parse;
+JSON.parse = function(){
+	var input = arguments[0];
+	var res;
+	try{
+		res = _parse.apply(this, arguments);
+	}catch(err){
+		if(typeof input == 'string') return input;
+		else throw err;
+	}finally{
+		return res;
+	}
+};
+
 // =====================================
 // For Add/Update commit ===============
 // =====================================
@@ -57,10 +71,10 @@ exports.addCommit = function(data){
 		note = data.note || "",
 		image = data.image || null;
 
-	if(components && typeof components != "string") components = JSON.stringify(components);
+	// if(components && typeof components != "string") components = JSON.stringify(components);
 	// if(image && typeof image == "string") image = JSON.parse(image);
-	if(machines && typeof machines != "string") machines = JSON.stringify(machines);
-	if(repos && typeof repos != "string") repos = JSON.stringify(repos);
+	// if(machines && typeof machines != "string") machines = JSON.stringify(machines);
+	// if(repos && typeof repos != "string") repos = JSON.stringify(repos);
 
 	var db = admin.database();
 	var projectCommitRef = db.ref("project/" + data.project_id + "/commits");
@@ -73,14 +87,14 @@ exports.addCommit = function(data){
 			
 			return new Promise(function(resolve, reject){
 				var resData = {
-					project_id: data.project_id,
+					project_id: parseInt(data.project_id),
 					user_id: data.user_id,
 					message: message,
 					components: components,
 					machines: machines,
 					repos: repos,
 					note: note,
-					image_data: res? JSON.stringify(res) : ""
+					image_data: res || ""
 				};
 
 				resData.id = newCommitRef.key;
@@ -176,10 +190,10 @@ exports.getCommits = function(project_id){
 					resolve(
 						Object.keys(data).reverse().map(function(key){
 							var output = data[key];
-							if(output.image_data) output.image_data = JSON.parse(output.image_data);
-							if(output.components) output.components = JSON.parse(output.components);
-							if(output.machines) output.machines = JSON.parse(output.machines);
-							if(output.repos) output.repos = JSON.parse(output.repos);
+							if(output.image_data && typeof output.image_data == 'string') output.image_data = JSON.parse(output.image_data);
+							if(output.components && typeof output.components == 'string') output.components = JSON.parse(output.components);
+							if(output.machines && typeof output.machines == 'string') output.machines = JSON.parse(output.machines);
+							if(output.repos && typeof output.repos == 'string') output.repos = JSON.parse(output.repos);
 							return output;
 						})
 					);
@@ -230,13 +244,46 @@ exports.addProject = function(name, user_id, description, license){
 };
 
 // exports.updateProject
+exports.getAllProjects = function(index, length){
+	var db = admin.database();
+	var userRef = db.ref("/user");
+	var projectValidsRef = db.ref("/_projectValids")
+	var projectRef = db.ref("/project");
 
-exports.getProjects = function(user_id){
+	index = (isNaN(index) || index == null)? 0 : parseInt(index);
+	length = (isNaN(length) || length == null)? 10 : parseInt(length);
+
+	return new Promise(function(resolve, reject){
+		projectValidsRef.on("value", function(validsSnapshot){
+			if(!validsSnapshot.exists()) reject("No more projects");
+			else{
+				let results = [];
+				var valids = validsSnapshot.val();
+				let limitProjects = valids.reverse().slice(index, index + length);
+				Promise.all(
+					limitProjects.map(function(p_id){ 
+						return new Promise(function(res, rej){
+							projectRef.child(p_id.toString()).once("value").then(function(projectShot){
+								if(projectShot.exists()) results.push(projectShot.val());
+								res();
+							},function(err){rej(err);});
+						});
+					})
+				).then(function(){ resolve(results); }).catch(function(err){ reject(err); });
+			}
+		});
+	});	
+}
+
+exports.getUserProjects = function(user_id, index, length){
 	if(!user_id) return Promise.reject("user_id can not be empty");
 
 	var db = admin.database();
 	var userRef = db.ref("/user/" + user_id);
 	var projectRef = db.ref("/project");
+
+	index = (isNaN(index) || index == null)? 0 : parseInt(index);
+	length = (isNaN(length) || length == null)? 10 : parseInt(length);
 
 	return new Promise(function(resolve, reject){
 		userRef.once("value").then(function(snapshot){
@@ -244,9 +291,10 @@ exports.getProjects = function(user_id){
 			else{
 				let results = [];
 				const userval = snapshot.val();
-				let projectList = JSON.parse( userval.projects || "[]" );
+				let projectList = userval.projects.slice();
+				let limitProjects = projectList.reverse().slice(index, index + length);
 				Promise.all(
-					projectList.map(function(p_id){ 
+					limitProjects.map(function(p_id){ 
 						return new Promise(function(res, rej){
 							projectRef.child(p_id.toString()).once("value").then(function(projectShot){
 								if(projectShot.exists()) results.push(projectShot.val());

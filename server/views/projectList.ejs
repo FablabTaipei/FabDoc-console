@@ -46,7 +46,34 @@
         var projectList = new Vue({
             el: '#project-list',
             data: {
-                items: <%- itemsStr %>
+                items: []
+            },
+            mounted: function () {
+                var self = this;
+                self.fetchNews(0, 10);
+            },
+            methods:{
+                fetchNews: function(index, length){
+                    var self = this;
+                    $.ajax({
+                        url: '<%= getUrl %>?idx=' + index + '&len=' + length,
+                        method: 'GET',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (data) {
+                            if(data.items){
+                                data.items.forEach(function(item){
+                                    self.items.push(item);
+                                });
+                            }else{
+
+                            }
+                        },
+                        error: function (error) {
+                            console.log(JSON.stringify(error));
+                        }
+                    });
+                }
             }
         });
     </script>

@@ -10,38 +10,15 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp(functions.config().firebase);
 
-// Listens for new messages added to /commit/{Id}
-exports.serializeData = functions.database.ref('/commit/{pushId}')
-    .onCreate(event => {
-		// You must return a Promise when performing asynchronous tasks inside a Functions such as
-		// writing to the Firebase Realtime Database.
-
-		// let pushId = event.params.pushId;
-		// // Prevent call the method twice
-		// if(isNaN(pushId)){
-		// 	// Grab the current value of what was written to the Realtime Database.
-		// 	let data = event.data;
-		// 	let currentRef = data.ref;
-		// 	let rootRef = currentRef.root;
-		// 	const original = data.val();
-		// 	return rootRef.child('/_tableInfo/commit').transaction(function(currentData){
-			
-		// 		let currentIndex = 1;
-		// 		let currentCount = 0;
-		// 		if(currentData != null){
-		// 			currentIndex = currentData._next;
-		// 			currentCount = currentData._count;
-		// 		}
-		// 		currentRef.parent.child(currentIndex.toString()).set(original);
-		// 		currentRef.parent.child(pushId).remove();
-
-		// 		return { _count: ++currentCount, _next: ++currentIndex };
-		// 	});
-		// }
-		// return;
-
-		return Promise.resolve();
-    });
+const transactionPushSet = function(id){
+	return function(current){
+		if(current){
+			if(typeof current == 'string') current = JSON.parse(current);
+			if(current.indexOf(id) == -1) current.push(id);
+			return current;
+		}else return [id]; 
+	};
+};
 
 exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
 	.onCreate(event => {
@@ -53,13 +30,9 @@ exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
 			let currentRef = data.ref;
 			let rootRef = currentRef.root;
 
-			rootRef.child("user/" + original.user_id + "/projects").transaction(function(currentData){
-				if(currentData){
-					let list = JSON.parse(currentData);
-					if(list.indexOf(original.id) == -1) list.push(original.id);
-					return JSON.stringify(list);
-				}else return "[" + original.id + "]"; 
-			});
+			rootRef.child("user/" + original.user_id + "/projects").transaction(transactionPushSet(original.id));
+
+			rootRef.child("_projectValids").transaction(transactionPushSet(original.id));
 
 			return rootRef.child("_tableIndex/project/" + original.name).set(parseInt(pushId));
 		}
