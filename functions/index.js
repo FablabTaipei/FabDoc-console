@@ -60,8 +60,8 @@ exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
 					return JSON.stringify(list);
 				}else return "[" + original.id + "]"; 
 			});
-			
-			return currentRef.parent.child(original.name).set(parseInt(pushId));
+
+			return rootRef.child("_tableIndex/project/" + original.name).set(parseInt(pushId));
 		}
 	});
 
@@ -71,7 +71,7 @@ exports.makeUserNameIndex = functions.database.ref('/user/{pushId}')
 		let data = event.data;
 		const original = data.val();
 		if(!isNaN(pushId) && isNaN(original)){	// pushId is Number, and data is not number
-			return data.ref.parent.child(original.username).set(parseInt(pushId));
+			return data.ref.root.child("_tableIndex/user/" + original.username).set(parseInt(pushId))
 		}
 	});
 

@@ -198,10 +198,11 @@ exports.addProject = function(name, user_id, description, license){
 
 	var db = admin.database();
 	var rootRef = db.ref();
+	var projectIndexRef = rootRef.child("/_tableIndex/project/" + name);
 	var projectRef = rootRef.child("project");
 	
 	return new Promise(function(resolve, reject){
-		projectRef.child(name).once("value")
+		projectIndexRef.once("value")
 			.then(function(snapshot) {
 				if(snapshot.exists()) reject("name has duplicated.");
 				else{
@@ -262,10 +263,10 @@ exports.getProjects = function(user_id){
 // =====================================
 exports.findUser = function(user, pass){
 	var db = admin.database();
-	var usernameRef = db.ref("/user/" + user);
+	var userIndexRef = db.ref("/_tableIndex/user/" + user);
 
 	return new Promise(function(resolve, reject){
-		usernameRef.once("value", function(snapshot){
+		userIndexRef.once("value", function(snapshot){
 			if(!snapshot.exists()) reject("The user is not exist.");
 			else{
 				var id = snapshot.val();
@@ -293,10 +294,11 @@ exports.addUser = function(user, pass, email){
 	
 	var db = admin.database();
 	var rootRef = db.ref();
+	var userIndexRef = rootRef.child("/_tableIndex/user/" + user);
 	var userRef = rootRef.child("user");
 	
 	return new Promise(function(resolve, reject){
-		userRef.child(user).once("value")
+		userIndexRef.once("value")
 			.then(function(snapshot) {
 				if(snapshot.exists()) reject("username has duplicated.");
 				else{
