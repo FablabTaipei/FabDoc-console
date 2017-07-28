@@ -230,7 +230,7 @@
         socketInstance.on('pass_compressed_image', function(data) {
             var image = '<li>' + '<input type="checkbox" id="pr' +
                 frame.items.length + '" /><label for="pr' + frame.items.length + '" class="img-label" id="li' + frame.items.length + '"><img id="item-' +
-                frame.items.length + '" src="data: ' + data.type + ';base64,' +
+                frame.items.length + '" src="data:' + data.type + ';base64,' +
                 data.base64 + '" path="' + data.filepath + '"/></label>' + '</li>';
             frame.add(image);
             frame.activate(frame.items.length - 1);
