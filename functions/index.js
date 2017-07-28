@@ -65,6 +65,16 @@ exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
 		}
 	});
 
+exports.makeUserNameIndex = functions.database.ref('/user/{pushId}')
+	.onCreate(event => {
+		let pushId = event.params.pushId;
+		let data = event.data;
+		const original = data.val();
+		if(!isNaN(pushId) && isNaN(original)){	// pushId is Number, and data is not number
+			return data.ref.parent.child(original.username).set(parseInt(pushId));
+		}
+	});
+
 exports.addCommitTimeStamp = functions.database.ref('/project/{projectId}/commits/{commitId}')
 	.onCreate(event => {
 		let projectId = event.params.projectId;

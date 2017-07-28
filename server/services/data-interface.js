@@ -284,3 +284,41 @@ exports.findUser = function(user, pass){
 	});
 };
 
+exports.addUser = function(user, pass, email){
+	if(!user) return Promise.reject("username can not be empty");
+	if(!pass) return Promise.reject("password can not be empty");
+	if(!email) return Promise.reject("email can not be empty");
+	if(user.replace(/[0-9]/,'') == "") return Promise.reject("username can not contain only numbers.");
+	if(user.replace(/[^a-zA-Z0-9]/, '') != user) return Promise.reject("username only contains numbers, english letters.");
+	
+	var db = admin.database();
+	var rootRef = db.ref();
+	var userRef = rootRef.child("user");
+	
+	return new Promise(function(resolve, reject){
+		userRef.child(user).once("value")
+			.then(function(snapshot) {
+				if(snapshot.exists()) reject("username has duplicated.");
+				else{
+					// to add user.
+					var resData = {
+						username: user,
+						password: md5(pass),
+						email: email,
+						projects: "[]",
+						verified: true
+					};
+					rootRef.child('/_tableInfo/user').transaction(transactionTableInfo, 
+						function(error, committed, snapshot) {
+							let currentData = snapshot.val();
+							let currentIndex = currentData._next;
+							
+							resData.id = currentIndex;
+							userRef.child(currentIndex.toString()).set(resData);
+						}
+					).then(function(){ resolve(resData); }, function(err){ reject(err); });
+				}
+			}).catch(function(err){ reject(err); });
+	});
+};
+
