@@ -3,7 +3,6 @@
  */
 var express = require('express');
 var _ = require('lodash');
-var uuid = require('node-uuid');
 var path = require('path');
 var utils = require('../utils');
 var interface = require('../services/data-interface');
@@ -15,14 +14,6 @@ var isDev = process.env.NODE_ENV === 'development';
 // var uaparser = require('ua-parser-js');
 // var compiled_app_module_path = path.resolve(__dirname, '../../', 'public', 'assets', 'server.js');
 // var App = require(compiled_app_module_path);
-
-function checkAndUpdateCookie(req, res){
-    var updateCookieValue = utils.getCookie(req);
-
-    if(!updateCookieValue) updateCookieValue = uuid.v4();
-
-    utils.setCookie(res, updateCookieValue, 1000 * 60 * 60 * 24); // 24 hrs
-}
 
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
@@ -252,7 +243,7 @@ module.exports = function(app, passport) {
         successRedirect : '/', // redirect to the secure profile section
         failureRedirect : '/login', // redirect back to the signup page if there is an error
         failureFlash : false // allow flash messages
-    }), checkAndUpdateCookie);
+    }));
 
     app.get('/logout', function(req, res) {
         req.logout();

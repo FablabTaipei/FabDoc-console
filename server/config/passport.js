@@ -3,6 +3,8 @@
 // load all the things we need
 var LocalStrategy   = require('passport-local').Strategy;
 var interface = require('../services/data-interface');
+var uuid = require('node-uuid');
+var utils = require('../utils');
 
 // var users = {
 //   account: {
@@ -11,6 +13,14 @@ var interface = require('../services/data-interface');
 //     id: 1
 //   }
 // };
+
+function checkAndUpdateCookie(req, res){
+    var updateCookieValue = utils.getCookie(req);
+
+    if(!updateCookieValue) updateCookieValue = uuid.v4();
+
+    utils.setCookie(res, updateCookieValue, 1000 * 60 * 60 * 24 * 7); // 1 week
+}
 
 // check login user: https://gist.github.com/manjeshpv/84446e6aa5b3689e8b84
 // https://github.com/manjeshpv/node-express-passport-mysql
@@ -44,9 +54,9 @@ module.exports = function(passport) {
         // by default, local strategy uses username and password, we will override with email
         usernameField : 'username',
         passwordField : 'password',
-        passReqToCallback : false // allows us to pass back the entire request to the callback
+        passReqToCallback : true // allows us to pass back the entire request to the callback
     },
-    function(username, password, done) { // callback with email and password from our form
+    function(req, username, password, done) { // callback with email and password from our form
 
         // find a user whose email is the same as the forms email
         // we are checking to see if the user trying to login already exists
@@ -70,6 +80,7 @@ module.exports = function(passport) {
         interface.findUser(username, password).then(
             function(user){
                 console.log("login user:" + user);
+                checkAndUpdateCookie(req, req.res);
                 done( null, user );
             },
             function(err){ return done( null, false, { message: err } ); }

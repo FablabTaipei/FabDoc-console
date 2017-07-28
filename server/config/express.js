@@ -42,7 +42,7 @@ module.exports = function (app, passport) {
     app.use(session({
       secret: 'fabdocconsole',
       resave: false,
-      cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
+      cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 days
     })); // session secret  
   }else{
     app.use(session({ secret: 'ilovescotchscotchyscotchscotch' })); // session secret  
