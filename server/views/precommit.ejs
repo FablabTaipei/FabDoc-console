@@ -79,7 +79,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="col-xs-12 btn-push" v-cloak>
-                            <button class="btn btn-success pull-right" type="button">
+                            <button class="btn btn-success pull-right" type="button" @click="pushCommits">
                             Push <span class="badge"> {{ commitQueue }} </span>
                             </button>
                         </div>
@@ -230,7 +230,7 @@
         socketInstance.on('pass_compressed_image', function(data) {
             var image = '<li>' + '<input type="checkbox" id="pr' +
                 frame.items.length + '" /><label for="pr' + frame.items.length + '" class="img-label" id="li' + frame.items.length + '"><img id="item-' +
-                frame.items.length + '" src="data: ' + data.type + ';base64,' +
+                frame.items.length + '" src="data:' + data.type + ';base64,' +
                 data.base64 + '" path="' + data.filepath + '"/></label>' + '</li>';
             frame.add(image);
             frame.activate(frame.items.length - 1);
@@ -323,7 +323,12 @@
                         components: this.components,
                         machines: this.machines,
                         repos: this.repos,
-                        note: this.note
+                        note: this.note,
+                        image: {
+                            filename: $('#item-' + id).attr('path').split('/').pop(),
+                            base64String: $('#item-' + id).attr('src').split(',')[1],
+                            mediaType: $('#item-' + id).attr('src').split(':')[1].split(';')[0],
+                        },
                     });
                     $('#pr' + id).prop('checked', true);
                     $('#pr' + id).prop('disabled', true);
@@ -364,6 +369,30 @@
                     $('#pr' + id).prop('checked', false);
                     $('#pr' + id).prop('disabled', false);
                     $('#li' + id).css("background-color", "white");
+                },
+                pushCommits: function() {
+                    var sData = JSON.stringify(this.commits);
+                    console.log("testpush");
+                    var url = $(location).attr('pathname').split('/');
+                    var id = url[url.length - 2];
+                    console.log(id);
+                    $.ajax({
+                        url: '/project/' + id + '/commits',
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        data: sData,
+                        success: function(response) {
+                            if (response.status == "OK") {
+                                // OK
+                            } else {
+                                console.log(response.error);
+                            }
+                        },
+                        error: function(response) {
+                            console.log(response);
+                        }
+                    });
                 },
 
                 addComponent: function() {
