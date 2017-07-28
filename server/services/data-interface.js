@@ -60,6 +60,7 @@ exports.addCommit = function(data){
 	if(components && typeof components != "string") components = JSON.stringify(components);
 	// if(image && typeof image == "string") image = JSON.parse(image);
 	if(machines && typeof machines != "string") machines = JSON.stringify(machines);
+	if(repos && typeof repos != "string") repos = JSON.stringify(repos);
 
 	var db = admin.database();
 	var projectCommitRef = db.ref("project/" + data.project_id + "/commits");
@@ -178,6 +179,7 @@ exports.getCommits = function(project_id){
 							if(output.image_data) output.image_data = JSON.parse(output.image_data);
 							if(output.components) output.components = JSON.parse(output.components);
 							if(output.machines) output.machines = JSON.parse(output.machines);
+							if(output.repos) output.repos = JSON.parse(output.repos);
 							return output;
 						})
 					);
