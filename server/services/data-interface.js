@@ -291,7 +291,7 @@ exports.getUserProjects = function(user_id, index, length){
 			else{
 				let results = [];
 				const userval = snapshot.val();
-				let projectList = userval.projects.slice();
+				let projectList = (userval.projects? userval.projects.slice() : []);
 				let limitProjects = projectList.reverse().slice(index, index + length);
 				Promise.all(
 					limitProjects.map(function(p_id){ 
@@ -357,7 +357,6 @@ exports.addUser = function(user, pass, email){
 						username: user,
 						password: md5(pass),
 						email: email,
-						projects: "[]",
 						verified: true
 					};
 					rootRef.child('/_tableInfo/user').transaction(transactionTableInfo, 

@@ -49,39 +49,37 @@
 	<script type="text/javascript">
 		$("#testpush").click(function(){
 
-			var requestData = {
-				items: [
-					{
-						message: "test1",
-						components: [{"name":"hook","quantity":2,"point":[23,25,100,200]},{"name":"hamer","quantity":1,"point":[66,45,150,40]}],
-						machines: ["shit","damn"],
-						repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
-						note: "test",
-						image: {
-							filename: '<%= filename %>',
-							base64String: '<%= base64 %>',
-							mediaType: '<%= type %>'
-						}
-					},
-					{
-						message: "test2",
-						components: [{"name":"hook","quantity":2,"point":[23,25,100,200]},{"name":"hamer","quantity":1,"point":[66,45,150,40]}],
-						machines: ["shit","damn"],
-						repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
-						note: "test",
-						image: {
-							filename: '<%= filename %>',
-							base64String: '<%= base64 %>',
-							mediaType: '<%= type %>'
-						}
+			var requestData = [
+				{
+					message: "test1",
+					components: [{"name":"hook","quantity":2,"point":[23,25,100,200]},{"name":"hamer","quantity":1,"point":[66,45,150,40]}],
+					machines: ["shit","damn"],
+					repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
+					note: "test",
+					image: {
+						filename: '<%= filename %>',
+						base64String: '<%= base64 %>',
+						mediaType: '<%= type %>'
 					}
-				]
-			};
+				},
+				{
+					message: "test2",
+					components: [{"name":"hook","quantity":2,"point":[23,25,100,200]},{"name":"hamer","quantity":1,"point":[66,45,150,40]}],
+					machines: ["shit","damn"],
+					repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
+					note: "test",
+					image: {
+						filename: '<%= filename %>',
+						base64String: '<%= base64 %>',
+						mediaType: '<%= type %>'
+					}
+				}
+			];
 
 			var sData = JSON.stringify(requestData);
 
             $.ajax({
-                url: '/project/1/commits',
+                url: '/project/21/commits',
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json; charset=utf-8',

@@ -33,6 +33,9 @@
                         </a>
                         </div>
                     </li>
+                    <div v-if="hasNext">
+                        <button type="button" class="btn btn-primary" @click="fetchNews(fetchIndex,itemsPerPage)">Show next {{itemsPerPage}} items</button>
+                    </div>
                 </ul>
             </div>
         </div>
@@ -46,11 +49,14 @@
         var projectList = new Vue({
             el: '#project-list',
             data: {
-                items: []
+                items: [],
+                hasNext: false,
+                itemsPerPage: 10,
+                fetchIndex: 0
             },
             mounted: function () {
                 var self = this;
-                self.fetchNews(0, 10);
+                self.fetchNews(self.fetchIndex, self.itemsPerPage);
             },
             methods:{
                 fetchNews: function(index, length){
@@ -65,8 +71,10 @@
                                 data.items.forEach(function(item){
                                     self.items.push(item);
                                 });
+                                self.hasNext = data.items.length >= length;
+                                self.fetchIndex = index + length;
                             }else{
-
+                                self.hasNext = false;
                             }
                         },
                         error: function (error) {
