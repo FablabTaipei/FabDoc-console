@@ -28,7 +28,7 @@
                         <div class="col-md-4">
                             <h4>{{item.message}}</h4>
                             <h5> Component </h5>
-                            <ul v-for="component in JSON.parse(item.components)" v-cloak>
+                            <ul v-for="component in item.components" v-cloak>
                                 <li> {{component.amount}} x {{component.name}} </li>
                             </ul>
                             <h5> Machine </h5>
