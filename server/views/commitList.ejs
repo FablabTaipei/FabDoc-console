@@ -26,8 +26,20 @@
                         </div>
                         <div class="col-md-4">
                             <h4>{{item.message}}</h4>
-                            <p>{{item.note}}</p>
-                        </a>
+                            <h5> Component </h5>
+                            <ul v-for="component in JSON.parse(item.components)" v-cloak>
+                                <li> {{component.amount}} x {{component.name}} </li>
+                            </ul>
+                            <h5> Machine </h5>
+                            <ul v-for="machine in item.machines" v-cloak>
+                                <li> {{machine.name}} </li>
+                            </ul>
+                            <h5> Repository </h5>
+                            <ul v-for="repo in item.repos" v-cloak>
+                                <li> {{repo.name}} </li>
+                            </ul>
+                            <h5> Note </h5>
+                            <p v-cloak>{{item.note}}</p>
                         </div>
                     </li>
                 </ul>
@@ -40,7 +52,7 @@
     </footer>
 
     <script type="text/javascript">
-    // [{"components":"[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]","id":"-KpyndkB2I77EwiuDYp4","image_data":"","machines":"[\"shit\",\"damn\"]","message":"asdfasdsdf","note":"this is a test","project_id":1,"repos":"https://github.com/FablabTaipei/FabDoc-RPi-client","user_id":1},{"components":"[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]","id":"-KpyxPJtN-975_sgOaPS","image_data":"[{\"bucket\":\"fabdoc-beta.appspot.com\",\"encodeFilename\":\"1501073612457-flower.jpg\",\"token\":\"1ed78b0fdbc680e99e9c3cbc2b9bd6e0\"}]","machines":"[\"shit\",\"damn\"]","message":"test with image4","note":"this is a test","project_id":1,"repos":"https://github.com/FablabTaipei/FabDoc-RPi-client","user_id":1}]
+        // [{"components":"[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]","id":"-KpyndkB2I77EwiuDYp4","image_data":"","machines":"[\"shit\",\"damn\"]","message":"asdfasdsdf","note":"this is a test","project_id":1,"repos":"https://github.com/FablabTaipei/FabDoc-RPi-client","user_id":1},{"components":"[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]","id":"-KpyxPJtN-975_sgOaPS","image_data":"[{\"bucket\":\"fabdoc-beta.appspot.com\",\"encodeFilename\":\"1501073612457-flower.jpg\",\"token\":\"1ed78b0fdbc680e99e9c3cbc2b9bd6e0\"}]","machines":"[\"shit\",\"damn\"]","message":"test with image4","note":"this is a test","project_id":1,"repos":"https://github.com/FablabTaipei/FabDoc-RPi-client","user_id":1}]
         var commitList = new Vue({
             el: '#commit-list',
             data: {

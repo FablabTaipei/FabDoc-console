@@ -17,7 +17,7 @@
 
             </div>
             <div class="col-md-9">
-                <ul class="list-unstyled" id="project-list">
+                <ul class="list-unstyled" id="project-list" v-cloak>
                     <li class="row project-item" v-for="item in items">
                         <div class="col-md-8 project-name">
                             <h3>
@@ -26,11 +26,12 @@
                             <p>
                                 {{item.description}}
                             </p>
+                            <h4> License: {{item.License}}</h4>
                         </div>
                         <div class="col-md-4 project-img">
-                            <a href="#">
-                            <img class="project-img" src="" />
-                        </a>
+                            <a href="">
+                                <!-- <img class="project-img" src="" /> -->
+                            </a>
                         </div>
                     </li>
                     <div v-if="hasNext">
@@ -54,30 +55,30 @@
                 itemsPerPage: 10,
                 fetchIndex: 0
             },
-            mounted: function () {
+            mounted: function() {
                 var self = this;
                 self.fetchNews(self.fetchIndex, self.itemsPerPage);
             },
-            methods:{
-                fetchNews: function(index, length){
+            methods: {
+                fetchNews: function(index, length) {
                     var self = this;
                     $.ajax({
                         url: '<%= getUrl %>?idx=' + index + '&len=' + length,
                         method: 'GET',
                         dataType: 'json',
                         contentType: 'application/json; charset=utf-8',
-                        success: function (data) {
-                            if(data.items){
-                                data.items.forEach(function(item){
+                        success: function(data) {
+                            if (data.items) {
+                                data.items.forEach(function(item) {
                                     self.items.push(item);
                                 });
                                 self.hasNext = data.items.length >= length;
                                 self.fetchIndex = index + length;
-                            }else{
+                            } else {
                                 self.hasNext = false;
                             }
                         },
-                        error: function (error) {
+                        error: function(error) {
                             console.log(JSON.stringify(error));
                         }
                     });
