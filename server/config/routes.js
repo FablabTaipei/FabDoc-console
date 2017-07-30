@@ -106,7 +106,8 @@ module.exports = function(app, passport) {
                 .then(
                     function(results){
                         // to return
-                        res.render(path.resolve(__dirname, '../', 'views/commitList.ejs'), { itemsStr: JSON.stringify(results) } );
+                        var appendUrl = req.user? ("/project/" + id + "/precommit") : "";
+                        res.render(path.resolve(__dirname, '../', 'views/commitList.ejs'), { itemsStr: JSON.stringify(results || []), appendUrl: appendUrl } );
                     },
                     function(err){ res.status(500).json({error: "Internal server error: " + err}); }
                 );
@@ -142,6 +143,12 @@ module.exports = function(app, passport) {
         interface.getAllProjects(idx, len)
             .then(
                 function(results){
+                    var userId = req.user;
+                    if(userId) {    // if login
+                        results.forEach(function(item){ 
+                            if(item.user_id == userId) item.appendUrl = "/project/" + item.id + "/precommit";
+                        });
+                    }
                     res.status(200).json({ items: results });
                 },
                 function(err){ res.status(500).json({error: "Internal server error: " + err}); }
@@ -158,6 +165,10 @@ module.exports = function(app, passport) {
         interface.getUserProjects(req.user, idx, len)
             .then(
                 function(results){
+                    var userId = req.user;
+                    results.forEach(function(item){
+                        if(item.user_id == userId) item.appendUrl = "/project/" + item.id + "/precommit";
+                    });
                     res.status(200).json({ items: results });
                 },
                 function(err){ res.status(500).json({error: "Internal server error: " + err}); }

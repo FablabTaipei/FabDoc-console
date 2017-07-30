@@ -20,7 +20,7 @@ const transactionPushSet = function(id){
 	};
 };
 
-exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
+exports.makeProjectReference = functions.database.ref('/project/{pushId}')
 	.onCreate(event => {
 		let pushId = event.params.pushId;
 		let data = event.data;
@@ -30,11 +30,14 @@ exports.makeProjectNameIndex = functions.database.ref('/project/{pushId}')
 			let currentRef = data.ref;
 			let rootRef = currentRef.root;
 
-			rootRef.child("user/" + original.user_id + "/projects").transaction(transactionPushSet(original.id));
-
-			rootRef.child("_projectValids").transaction(transactionPushSet(original.id));
-
-			return rootRef.child("_tableIndex/project/" + original.name).set(parseInt(pushId));
+			return Promise.all([
+				// reference on user/:id/projects.
+				rootRef.child("user/" + original.user_id + "/projects").transaction(transactionPushSet(original.id)),
+				// reference on _projectValids for all projects.
+				rootRef.child("_projectValids").transaction(transactionPushSet(original.id)),
+				// add timestamp.
+				data.ref.child("created_at").set((new Date()).toGMTString())
+			]);
 		}
 	});
 
@@ -50,13 +53,6 @@ exports.makeUserNameIndex = functions.database.ref('/user/{pushId}')
 
 exports.addCommitTimeStamp = functions.database.ref('/project/{projectId}/commits/{commitId}')
 	.onCreate(event => {
-		let projectId = event.params.projectId;
-		let commitId = event.params.commitId;
-		let data = event.data;
-		let original = data.val();
-
-		original["created_at"] = (new Date()).toGMTString();
-
-		return data.ref.update(original);
+		return event.data.ref.child("created_at").set((new Date()).toGMTString());
 	});
 

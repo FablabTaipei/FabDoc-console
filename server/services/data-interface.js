@@ -208,38 +208,35 @@ exports.getCommits = function(project_id){
 // =====================================
 exports.addProject = function(name, user_id, description, license){
 	if(!user_id) return Promise.reject("user_id can not be empty");
-	if(!name) return Promise.reject("name can not be empty");
-	if(name.replace(/[^a-zA-Z0-9\-_]/, '') != name) return Promise.reject("name only contains numbers, english letters, dash, underline.");
+	if(!name || name.trim() == "") return Promise.reject("name can not be empty");
+	// if(name.replace(/[^a-zA-Z0-9\-_]/, '') != name) return Promise.reject("name only contains numbers, english letters, dash, underline.");
 	if(!isNaN(name)) return Promise.reject("name can not be a number.");
+
+	name = name.trim();
+
+	if(name.length > 255) return Promise.reject("name characters can not over than 255.");
 
 	var db = admin.database();
 	var rootRef = db.ref();
-	var projectIndexRef = rootRef.child("/_tableIndex/project/" + name);
 	var projectRef = rootRef.child("project");
 	
 	return new Promise(function(resolve, reject){
-		projectIndexRef.once("value")
-			.then(function(snapshot) {
-				if(snapshot.exists()) reject("name has duplicated.");
-				else{
-					// to add project.
-					var resData = {
-						name: name,
-						user_id: user_id,
-						description: description || "",
-						License: license || ""
-					};
-					rootRef.child('/_tableInfo/project').transaction(transactionTableInfo, 
-						function(error, committed, snapshot) {
-							let currentData = snapshot.val();
-							let currentIndex = currentData._next;
-							
-							resData.id = currentIndex;
-							projectRef.child(currentIndex.toString()).set(resData);
-						}
-					).then(function(){ resolve(resData); }, function(err){ reject(err); });
-				}
-			}).catch(function(err){ reject(err); });
+		// to add project.
+		var resData = {
+			name: name,
+			user_id: user_id,
+			description: description || "",
+			License: license || ""
+		};
+		rootRef.child('/_tableInfo/project').transaction(transactionTableInfo, 
+			function(error, committed, snapshot) {
+				let currentData = snapshot.val();
+				let currentIndex = currentData._next;
+				
+				resData.id = currentIndex;
+				projectRef.child(currentIndex.toString()).set(resData);
+			}
+		).then(function(){ resolve(resData); }, function(err){ reject(err); });
 	});
 };
 
