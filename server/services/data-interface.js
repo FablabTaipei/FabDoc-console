@@ -194,6 +194,9 @@ exports.getCommits = function(project_id){
 							if(output.components && typeof output.components == 'string') output.components = JSON.parse(output.components);
 							if(output.machines && typeof output.machines == 'string') output.machines = JSON.parse(output.machines);
 							if(output.repos && typeof output.repos == 'string') output.repos = JSON.parse(output.repos);
+
+							if(output.image_data) output.imageUrls = output.image_data.map(function(image){ return "https://firebasestorage.googleapis.com/v0/b/" + image.bucket + "/o/" + image.encodeFilename + "?alt=media&token=" + image.token });
+							
 							return output;
 						})
 					);

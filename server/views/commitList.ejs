@@ -21,8 +21,8 @@
                 <ul class="list-unstyled">
                     <li class="row commit-item" v-for="item in items">
                         <div class="col-md-8">
-                            <div v-for="image in item.image_data">
-                                <img width="100%" :src="'https://firebasestorage.googleapis.com/v0/b/' + image.bucket + '/o/' + image.encodeFilename + '?alt=media&token=' + image.token">
+                            <div v-for="url in item.imageUrls">
+                                <img width="100%" :src="url">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -41,7 +41,6 @@
     </footer>
 
     <script type="text/javascript">
-    // [{"components":"[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]","id":"-KpyndkB2I77EwiuDYp4","image_data":"","machines":"[\"shit\",\"damn\"]","message":"asdfasdsdf","note":"this is a test","project_id":1,"repos":"https://github.com/FablabTaipei/FabDoc-RPi-client","user_id":1},{"components":"[{\"name\":\"hook\",\"quantity\":2,\"point\":[23,25,100,200]},{\"name\":\"hamer\",\"quantity\":1,\"point\":[66,45,150,40]}]","id":"-KpyxPJtN-975_sgOaPS","image_data":"[{\"bucket\":\"fabdoc-beta.appspot.com\",\"encodeFilename\":\"1501073612457-flower.jpg\",\"token\":\"1ed78b0fdbc680e99e9c3cbc2b9bd6e0\"}]","machines":"[\"shit\",\"damn\"]","message":"test with image4","note":"this is a test","project_id":1,"repos":"https://github.com/FablabTaipei/FabDoc-RPi-client","user_id":1}]
         var commitList = new Vue({
             el: '#commit-list',
             data: {
