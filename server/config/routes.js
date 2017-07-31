@@ -114,6 +114,34 @@ module.exports = function(app, passport) {
         }
     });
 
+    app.post('/project/:id/push', loginRequired, function(req, res, next){
+        var userId = req.user;
+        var id = req.params.id;
+        if(!id || isNaN(id)) res.status(404);
+        else{
+            interface.pushCommits(id, req.body.commits)
+                .then(function(result){ res.status(200).json({ status: "OK" }); })
+                .catch(function(err){ res.status(500).json({error: "Internal server error: " + err}); });
+        }
+    });
+
+    // for single commit save
+    app.post('/project/:id/commit', loginRequired, function(req, res, next){
+        var userId = req.user;
+        var id = req.params.id;
+        if(!id || isNaN(id)) res.status(404);
+        else{
+            var commit = req.body;
+
+            commit.project_id = id;
+            commit.user_id = userId;
+            interface.addCommit(commit)
+                .then(function(result){ res.status(200).json({ status: "OK", data: result }); })
+                .catch(function(err){ res.status(500).json({error: "Internal server error: " + err}); });
+        }
+    });
+
+    // for batch commits
     app.post('/project/:id/commits', loginRequired, function(req, res, next){
         var userId = req.user;
         var id = req.params.id;

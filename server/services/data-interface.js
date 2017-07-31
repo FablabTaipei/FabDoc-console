@@ -94,6 +94,7 @@ exports.addCommit = function(data){
 					machines: machines,
 					repos: repos,
 					note: note,
+					publish: false,
 					image_data: res || ""
 				};
 
@@ -137,6 +138,42 @@ exports.updateCommit = function(id, data){
 					self.addCommit(data).then(function(result){ resolve(result); }, function(err){ reject(err); });
 				}
 			}).catch(function(err){ reject(err); });
+	});
+};
+
+// commits: Array of ID|commit_object
+exports.pushCommits = function(project_id, commits){
+	var ids;
+	if(commits){
+		ids = commits.map(function(com){
+			if(typeof com == 'string') return com;
+			else return com.id;
+		});
+	}
+
+	var db = admin.database();
+	var projectCommitRef = db.ref("project/" + project_id + "/commits/");
+	var self = this;
+
+	return new Promise(function(resolve, reject){
+		if(ids && ids.length > 0){
+			Promise.all(
+				ids.map(function(id){
+					projectCommitRef.child(id + "/publish").set(true)
+				})
+			)
+			.then(function(){ resolve(); })
+			.catch(function(err){ reject(err); });
+		}else{
+			// fetch all uncommits and make it publish
+			projectCommitRef.orderByChild("publish").equalTo(false)
+				.once("value", function(snapshot){
+					if(snapshot.exists()){
+						var collection = snapshot.val();
+						resolve( self.pushCommits(project_id, Object.keys(collection)) );
+					}else resolve();
+				}).catch(function(err){ reject(err); });
+		}
 	});
 };
 
@@ -196,7 +233,7 @@ exports.getCommits = function(project_id){
 							if(output.repos && typeof output.repos == 'string') output.repos = JSON.parse(output.repos);
 
 							if(output.image_data) output.imageUrls = output.image_data.map(function(image){ return "https://firebasestorage.googleapis.com/v0/b/" + image.bucket + "/o/" + image.encodeFilename + "?alt=media&token=" + image.token });
-							
+
 							return output;
 						})
 					);

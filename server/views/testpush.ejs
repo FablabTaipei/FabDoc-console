@@ -97,5 +97,77 @@
             });
 		});
 	</script>
+
+	<br/>
+	<h4>Test for single commit</h4>
+	<button id="testcommit">Commit</button>
+	<button id="testtotalpush">Push</button>
+
+	<script type="text/javascript">
+		var testTotalPushArray = [];
+		$("#testcommit").click(function(){
+			var requestData = {
+				message: "test2",
+				components: [{"name":"hook","quantity":2,"point":[23,25,100,200]},{"name":"hamer","quantity":1,"point":[66,45,150,40]}],
+				machines: ["shit","damn"],
+				repos: "https://github.com/FablabTaipei/FabDoc-RPi-client",
+				note: "test",
+				image: {
+					filename: '<%= filename %>',
+					base64String: '<%= base64 %>',
+					mediaType: '<%= type %>'
+				}
+			}
+
+			$.ajax({
+                url: '/project/21/commit',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(requestData),
+                success: function (response) {
+                	if(response.status == "OK"){
+                		// OK
+                		alert("OK");
+                		testTotalPushArray.push(response.data.id);
+                	}else{
+                		console.log(response.error);
+                	}
+                },
+                error: function (response) {
+                	console.log(response);
+                }
+            });
+
+		});
+
+		$("#testtotalpush").click(function(){
+			$.ajax({
+                url: '/project/21/push',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                // assign data like this 
+                data: JSON.stringify({ commits: testTotalPushArray }),
+                // Or not assign
+                // data: JSON.stringify({ commits: testTotalPushArray }),
+                success: function (response) {
+                	if(response.status == "OK"){
+                		// OK
+                		alert("OK");
+                	}else{
+                		console.log(response.error);
+                	}
+                },
+                error: function (response) {
+                	console.log(response);
+                }
+            });
+		});
+
+		// testcommit
+		// testtotalpush
+	</script>
+
 </body>
 </html>
