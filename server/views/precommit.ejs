@@ -29,6 +29,10 @@
                                     Turn on the Raspberry Pi installed FabDoc-RPi-client script, and scan the QR code with camera module.
                                 </p>
                                 <canvas class="qrcode" id="qrcode"></canvas>
+                                <% if (typeof isDev == "boolean" && isDev) { %>
+                                <!-- For Test -->
+                                <p>Token: <span id="qrcodeText"></span> </p>
+                                <% } %>
                                 <div class="alert alert-info" role="alert">
                                     <span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span> If you succeed, the page will start to capture snapshot as <strong>precommit</strong>.
                                 </div>
@@ -222,6 +226,10 @@
             console.log("Browser Connected. ");
         });
         socketInstance.on('pass_token', function(data) {
+            <% if (typeof isDev == "boolean" && isDev) { %>
+            // for test             
+            $("#qrcodeText").text(data.token);
+            <% } %>
             qrcodelib.toCanvas($('#qrcode')[0], data.token, function(error) {
                 if (error) console.error(error)
                 console.log('QR code generated!');
