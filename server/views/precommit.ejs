@@ -246,22 +246,46 @@
 
         var currentProject = <%= project %>;
         var STORAGE_KEY = 'local-commit';
+        var STORAGE_INDEXES_KEY = 'local-commit-indexes';
 
         var commitLocalStorage = {
             fetch: function() {
-                var commits = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-                commits.forEach(function(commit, index) {
-                    // var id = commit.id;
-                    // $('#pr' + id).prop('checked', true);
-                    // $('#pr' + id).prop('disabled', true);
-                    // $('#li' + id).css("background-color", "#428BCA");
-                    // commit.id = index;
-                    // commit.machine = {}
-                });
+                var commits = [];
+                var indexesStr = localStorage.getItem(STORAGE_INDEXES_KEY) || '';
+                if(indexesStr){
+                    var indexes = indexesStr.split(',');
+                    commits = indexes.map(function(index){
+                        return JSON.parse(localStorage.getItem(STORAGE_KEY + '-' + index) || '[]');
+                    });
+                }
+                // var commits = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+                // commits.forEach(function(commit, index) {
+                //     // var id = commit.id;
+                //     // $('#pr' + id).prop('checked', true);
+                //     // $('#pr' + id).prop('disabled', true);
+                //     // $('#li' + id).css("background-color", "#428BCA");
+                //     // commit.id = index;
+                //     // commit.machine = {}
+                // });
                 return commits;
             },
             save: function(commits) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(commits));
+                var indexesCollect = [];
+                commits.forEach(function(item){
+                    indexesCollect.push(item.id);
+                    localStorage.setItem(STORAGE_KEY + '-' + item.id, JSON.stringify(item));
+                });
+                localStorage.setItem(STORAGE_INDEXES_KEY, indexesCollect.join(','));
+            },
+            clear: function(){
+                var indexesStr = localStorage.getItem(STORAGE_INDEXES_KEY) || '';
+                if(indexesStr){
+                    localStorage.removeItem(STORAGE_INDEXES_KEY);
+                    var indexes = indexesStr.split(',');
+                    indexes.forEach(function(index){
+                        localStorage.removeItem(STORAGE_KEY + '-' + index);
+                    });
+                }   
             }
         }
 
@@ -385,6 +409,7 @@
                         success: function(response) {
                             if (response.status == "OK") {
                                 // OK
+                                commitLocalStorage.clear();
                             } else {
                                 console.log(response.error);
                             }
