@@ -27,8 +27,20 @@
                         </div>
                         <div class="col-md-4">
                             <h4>{{item.message}}</h4>
-                            <p>{{item.note}}</p>
-                        </a>
+                            <h5> Component </h5>
+                            <ul v-for="component in item.components" v-cloak>
+                                <li> {{component.amount}} x {{component.name}} </li>
+                            </ul>
+                            <h5> Machine </h5>
+                            <ul v-for="machine in item.machines" v-cloak>
+                                <li> {{machine.name}} </li>
+                            </ul>
+                            <h5> Repository </h5>
+                            <ul v-for="repo in item.repos" v-cloak>
+                                <li> {{repo.name}} </li>
+                            </ul>
+                            <h5> Note </h5>
+                            <p v-cloak>{{item.note}}</p>
                         </div>
                     </li>
                 </ul>
