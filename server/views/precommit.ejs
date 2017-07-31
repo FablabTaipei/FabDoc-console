@@ -30,12 +30,12 @@
                                 </p>
                                 <canvas class="qrcode" id="qrcode"></canvas>
                                 <% if (typeof isDev == "boolean" && isDev) { %>
-                                <!-- For Test -->
-                                <p>Token: <span id="qrcodeText"></span> </p>
-                                <% } %>
-                                <div class="alert alert-info" role="alert">
-                                    <span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span> If you succeed, the page will start to capture snapshot as <strong>precommit</strong>.
-                                </div>
+                                    <!-- For Test -->
+                                    <p>Token: <span id="qrcodeText"></span> </p>
+                                    <% } %>
+                                        <div class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span> If you succeed, the page will start to capture snapshot as <strong>precommit</strong>.
+                                        </div>
                             </div>
                             <div class="modal-footer hide">
                             </div>
@@ -64,6 +64,26 @@
                 </div>
             </div>
         </div>
+        <div class="modal" tabindex="-1" id="push-modal" role="dialog" data-show="false" data-backdrop="false" data-keyboard="false">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div id='push-view'>
+                            <div class="modal-header">
+                                <h3 class="modal-title">Successfully Push your commts!</h3>
+                            </div>
+                            <div class="modal-body">
+                                <p>
+                                    Now you can go back to <a href="/user/projects">personal projects list</a> or <a href="/projects">public projects list</a>
+                                </p>
+                            </div>
+                            <div class="modal-footer hide">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="container">
             <!-- <div class="alert alert-success" id="conneted-alert" role="alert">
@@ -83,7 +103,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="col-xs-12 btn-push" v-cloak>
-                            <button class="btn btn-success pull-right" type="button" @click="pushCommits">
+                            <button class="btn btn-success pull-right" type="button" data-loading-text="Loading..." id="pushButton" @click="pushCommits">
                             Push <span class="badge"> {{ commitQueue }} </span>
                             </button>
                         </div>
@@ -227,7 +247,7 @@
         });
         socketInstance.on('pass_token', function(data) {
             <% if (typeof isDev == "boolean" && isDev) { %>
-            // for test             
+            // for test
             $("#qrcodeText").text(data.token);
             <% } %>
             qrcodelib.toCanvas($('#qrcode')[0], data.token, function(error) {
@@ -260,9 +280,9 @@
             fetch: function() {
                 var commits = [];
                 var indexesStr = localStorage.getItem(STORAGE_INDEXES_KEY) || '';
-                if(indexesStr){
+                if (indexesStr) {
                     var indexes = indexesStr.split(',');
-                    commits = indexes.map(function(index){
+                    commits = indexes.map(function(index) {
                         return JSON.parse(localStorage.getItem(STORAGE_KEY + '-' + index) || '[]');
                     });
                 }
@@ -279,21 +299,21 @@
             },
             save: function(commits) {
                 var indexesCollect = [];
-                commits.forEach(function(item){
+                commits.forEach(function(item) {
                     indexesCollect.push(item.id);
                     localStorage.setItem(STORAGE_KEY + '-' + item.id, JSON.stringify(item));
                 });
                 localStorage.setItem(STORAGE_INDEXES_KEY, indexesCollect.join(','));
             },
-            clear: function(){
+            clear: function() {
                 var indexesStr = localStorage.getItem(STORAGE_INDEXES_KEY) || '';
-                if(indexesStr){
+                if (indexesStr) {
                     localStorage.removeItem(STORAGE_INDEXES_KEY);
                     var indexes = indexesStr.split(',');
-                    indexes.forEach(function(index){
+                    indexes.forEach(function(index) {
                         localStorage.removeItem(STORAGE_KEY + '-' + index);
                     });
-                }   
+                }
             }
         }
 
@@ -403,6 +423,8 @@
                     $('#li' + id).css("background-color", "white");
                 },
                 pushCommits: function() {
+                    $('#pushButton').prop('disabled', true);
+                    $('#pushButton').button('loading');
                     var sData = JSON.stringify(this.commits);
                     console.log("testpush");
                     var url = $(location).attr('pathname').split('/');
@@ -416,10 +438,11 @@
                         data: sData,
                         success: function(response) {
                             if (response.status == "OK") {
-                                // OK
                                 commitLocalStorage.clear();
+                                $('#push-modal').modal('show');
                             } else {
                                 console.log(response.error);
+                                alert('Cannot connect to the server, please try again later!');
                             }
                         },
                         error: function(response) {
