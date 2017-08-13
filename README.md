@@ -3,7 +3,6 @@ Make a server for picking images as commits, and command remote Raspberry Pi to 
 
 ### Remote Server
 - Host: 52.77.119.251   (Location: Singapore)
-- Host: 54.233.184.107  (Location: São Paulo)
 
 ![](https://i.imgur.com/7hSfU4v.jpg)
 
@@ -25,5 +24,6 @@ firebase deploy --only functions
 ```
 
 ### Progress report
+- 2017/08/13 Terminate demo server on Brazil.
 - 2017/07/29 We deploy current version to the remote servers.
 - 2017/03/03 We can login and see the homepage only, because this was copied from Kino's another project.
