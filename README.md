@@ -18,6 +18,11 @@ npm install -g firebase-tools
 firebase login
 ```
 
+#### Init functions
+```
+firebase init functions
+```
+
 #### Update & Deploy codes to Google
 ```
 firebase deploy --only functions
