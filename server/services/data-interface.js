@@ -45,6 +45,11 @@ JSON.parse = function(){
 	}
 };
 
+var _getImagePath = function(pid, cid, fname){
+	fname = fname || ""
+	return pid + "/" + cid + "-" + fname;
+};
+
 // =====================================
 // For Add/Update commit ===============
 // =====================================
@@ -80,7 +85,7 @@ exports.addCommit = function(data){
 	var projectCommitRef = db.ref("project/" + data.project_id + "/commits");
 	var newCommitRef = projectCommitRef.push();
 
-	return (image? self.saveImage(image) : Promise.resolve())
+	return (image? self.saveImage(image, data.project_id, newCommitRef.key) : Promise.resolve())
 		.then(function(res){
 			// append machines	// Machines: id, name, description, commit_ids?
 			// append commit
@@ -177,17 +182,18 @@ exports.pushCommits = function(project_id, commits){
 	});
 };
 
-exports.saveImage = function(imgArray){
+exports.saveImage = function(imgArray, project_id, commit_id){
 	// filename, base64String, mediaType
 	if(!Array.isArray(imgArray)) imgArray = [imgArray];
 	
 	var promises = imgArray.map(function(item){
 		var token = utils.getToken();
-		var filename = (new Date()).getTime() + "-" + item.filename;
+		// var filename = (new Date()).getTime() + "-" + item.filename;
+		var filename = encodeURIComponent(item.filename);
 		var base64String = item.base64String;
 		var mediaType = item.mediaType || 'image/png';
 		return new Promise(function(resolve, reject){
-			var file = bucket.file(filename);
+			var file = bucket.file( _getImagePath(project_id, commit_id, filename) );
 			var bufferStream = new stream.PassThrough();
 			bufferStream.end( Buffer.from(base64String, 'base64') );
 
@@ -204,13 +210,18 @@ exports.saveImage = function(imgArray){
 				})
 			)
 			.on('error', function(err) { reject(err); })
-			.on('finish', function() { resolve( { bucket: bucket.name, encodeFilename: encodeURIComponent(file.name), token: token} ); });
+			.on('finish', function() { resolve( { bucket: bucket.name, filename: file.name, token: token } ); });
 		})
 	});
 
 	return new Promise(function(resolve, reject){
 		Promise.all(promises).then(function(results){ resolve(results); }, function(err){ reject(err); });
 	});
+};
+
+exports.removeImage = function(filepath){
+	var file = bucket.file(filepath);
+	return file.delete();	// Promise
 };
 
 exports.getCommits = function(project_id){
@@ -232,7 +243,7 @@ exports.getCommits = function(project_id){
 							if(output.machines && typeof output.machines == 'string') output.machines = JSON.parse(output.machines);
 							if(output.repos && typeof output.repos == 'string') output.repos = JSON.parse(output.repos);
 
-							if(output.image_data) output.imageUrls = output.image_data.map(function(image){ return "https://firebasestorage.googleapis.com/v0/b/" + image.bucket + "/o/" + image.encodeFilename + "?alt=media&token=" + image.token });
+							if(output.image_data) output.imageUrls = output.image_data.map(function(image){ return "https://firebasestorage.googleapis.com/v0/b/" + image.bucket + "/o/" + (image.encodeFilename || encodeURIComponent(image.filename) ) + "?alt=media&token=" + image.token });
 
 							return output;
 						})
@@ -242,6 +253,31 @@ exports.getCommits = function(project_id){
 			.catch(function(err){ reject(err); });
 	});
 }
+
+exports.removeCommit = function(project_id, commit_id){
+	var self = this;
+	var db = admin.database();
+	var projectCommitRef = db.ref("project/" + project_id + "/commits/" + commit_id);
+
+	return new Promise(function(resolve, reject){
+		var removeImages = [];
+		projectCommitRef.once("value")
+			.then(function(snapshot){
+				if(snapshot.exists()){
+					var data = snapshot.val();
+					if(data.image_data && typeof data.image_data == 'string') removeImages = JSON.parse(data.image_data);
+					return projectCommitRef.remove();
+				}else reject("The commit not found");
+			})
+			.then(function(){
+				return Promise.all((removeImages || []).map(function(perImg){
+					return self.removeImage( decodeURIComponent(perImg.encodeFilename) || perImg.filename );
+				}));
+			})
+			.then(function(res){ resolve(res); })
+			.catch(function(err){ reject(err); });
+	});
+};
 
 // =====================================
 // For Add/Update/Get project ==========

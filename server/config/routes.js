@@ -141,6 +141,19 @@ module.exports = function(app, passport) {
         }
     });
 
+    // for single commit remove
+    app.delete('/project/:pid/commit/:cid', loginRequired, function(req, res, next){
+        var userId = req.user;
+        var pid = req.params.pid;
+        var cid = req.params.cid;
+        if(!pid || isNaN(pid)) res.status(404);
+        else{
+            interface.removeCommit(pid, cid)
+                .then(function(result){ res.status(200).json({ status: "OK", data: result }); })
+                .catch(function(err){ res.status(500).json({error: "Internal server error: " + err}); });
+        }
+    });
+
     // for batch commits
     app.post('/project/:id/commits', loginRequired, function(req, res, next){
         var userId = req.user;
