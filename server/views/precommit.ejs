@@ -89,8 +89,8 @@
             <!-- <div class="alert alert-success" id="conneted-alert" role="alert">
                 <a>Connected! Receiving <strong>prcommit</strong> from your device.</a>
             </div> -->
-            <div>
-                <div class="row" id="precommit-view">
+            <div class="row" id="precommit-view">
+                <div v-bind:class="{ 'loading-target' : loading }">
                     <div class="col-md-8">
                         <div class="img-view"><img id="editor" src="" path="" /></div>
                         <div class="frame">
@@ -205,12 +205,16 @@
                         </form>
                         <button type="button" class="btn btn-primary pull-right btn-save" @click="saveCommit">Commit</button>
                         <button type="button" class="btn btn-default pull-right" @click="removeCommit">Uncommit</button>
-                    </div>
+                    </div>    
+                </div>
+                
+                <div ref="loadwrap" v-show="loading" class="loading-mask">
+                    <div class="single4"></div>
                 </div>
             </div>
         </div>
     </main>
-
+ 
     <footer>
         <% include partials/footer %>
     </footer>
@@ -270,9 +274,10 @@
             $('#connected-modal').modal('show');
 
             $('#connected-alert').show();
+
+            app.$data.loading = false;
         });
 
-        var currentProject = <%= project %>;
         var STORAGE_KEY = 'local-commit';
         var STORAGE_INDEXES_KEY = 'local-commit-indexes';
 
@@ -332,6 +337,7 @@
                 newComponentName: '',
                 newMachine: '',
                 newRepo: '',
+                loading: true
             },
 
             watch: {
@@ -343,7 +349,14 @@
                         commitLocalStorage.save(commits);
                     },
                     deep: true
-                },
+                }
+            },
+
+            mounted: function(){
+                // to get width/height for loading wrap after rendered.
+                var main = this.$el;
+                var load = this.$refs.loadwrap;
+                $(load).width( main.offsetWidth ).height( main.offsetHeight );
             },
 
             computed: {
@@ -356,99 +369,154 @@
                 imageSelectedToggle: function() {
                     console.log("test");
                 },
-                saveCommit: function() {
-                    if (this.currentIndex === '') return;
-                    var id = this.currentIndex;
-                    var currentCommit = this.commits.filter(function(commit) {
+                getCommit: function(id){
+                    var self = this;
+                    id = id || self.currentIndex;
+                    if (!id) return;
+                    return self.commits.filter(function(commit) {
                         return commit.id === id;
                     })[0];
+                },
+                saveCommit: function() {
+                    var self = this;
+                    if(self.currentIndex === '') return;
+                    var id = self.currentIndex;
+                    var currentCommit = self.getCommit(id);
                     if (currentCommit) {
                         console.log("Have already committed human!");
                         return;
                     };
-                    this.addComponent();
-                    this.addMachine();
-                    this.addRepo();
-                    this.commits.push({
-                        id: this.currentIndex,
-                        message: this.message,
-                        components: this.components,
-                        machines: this.machines,
-                        repos: this.repos,
-                        note: this.note,
+                    self.addComponent();
+                    self.addMachine();
+                    self.addRepo();
+
+                    var passRaw = {
+                        message: self.message,
+                        components: self.components,
+                        machines: self.machines,
+                        repos: self.repos,
+                        note: self.note,
                         image: {
                             filename: $('#item-' + id).attr('path').split('/').pop(),
                             base64String: $('#item-' + id).attr('src').split(',')[1],
                             mediaType: $('#item-' + id).attr('src').split(':')[1].split(';')[0],
-                        },
-                    });
-                    $('#pr' + id).prop('checked', true);
-                    $('#pr' + id).prop('disabled', true);
-                    $('#li' + id).css("background-color", "#428BCA");
-                },
-                retrieveCommit: function(id) {
-                    var currentCommit = this
-                        .commits.filter(function(commit) {
-                            return commit.id === id;
-                        })[0];
-                    if (currentCommit) {
-                        this.message = currentCommit.message;
-                        this.components = currentCommit.components;
-                        this.machines = currentCommit.machines;
-                        this.repos = currentCommit.repos;
-                        this.note = currentCommit.note;
-                    } else {
-                        this.message = '';
-                        this.components = [];
-                        this.machines = [];
-                        this.repos = [];
-                        this.note = '';
-                    }
-                },
-                removeCommit: function() {
-                    var id = this.currentIndex;
-                    var currentCommit = this.commits.filter(function(commit) {
-                        return commit.id === id;
-                    })[0];
-                    var index = this.commits.indexOf(currentCommit);
-                    if (index == -1) return;
-                    this.commits.splice(index, 1);
-                    this.message = '';
-                    this.components = [];
-                    this.machines = [];
-                    this.repos = [];
-                    this.note = '';
-                    $('#pr' + id).prop('checked', false);
-                    $('#pr' + id).prop('disabled', false);
-                    $('#li' + id).css("background-color", "white");
-                },
-                pushCommits: function() {
-                    $('#pushButton').prop('disabled', true);
-                    $('#pushButton').button('loading');
-                    var sData = JSON.stringify(this.commits);
-                    console.log("testpush");
-                    var url = $(location).attr('pathname').split('/');
-                    var id = url[url.length - 2];
-                    console.log(id);
+                        }
+                    };
+
+                    self.loading = true;
                     $.ajax({
-                        url: '/project/' + id + '/commits',
+                        url: '/project/<%= project %>/commit',
                         type: 'POST',
                         dataType: 'json',
                         contentType: 'application/json; charset=utf-8',
-                        data: sData,
-                        success: function(response) {
-                            if (response.status == "OK") {
-                                commitLocalStorage.clear();
-                                $('#push-modal').modal('show');
-                            } else {
-                                console.log(response.error);
-                                alert('Cannot connect to the server, please try again later!');
-                            }
-                        },
-                        error: function(response) {
-                            console.log(response);
-                        }
+                        data: JSON.stringify(passRaw)
+                    })
+                    .done(function(response) {
+                        // Do this after promise callback
+                        var data = response.data;
+
+                        // remove the string for reduce storage spaces.
+                        delete passRaw.image.base64String;
+
+                        // get first image url
+                        if(data.imageUrls)
+                            passRaw.imageUrl = data.imageUrls[0];
+
+                        passRaw.id = id;
+                        passRaw.remote_id = data.id;
+                        
+                        self.commits.push(passRaw);
+
+                        $('#pr' + id).prop('checked', true);
+                        $('#pr' + id).prop('disabled', true);
+                        $('#li' + id).css("background-color", "#428BCA");
+                    })
+                    .fail(function(response){
+                        console.log(response.error);
+                        alert('Cannot connect to the server, please try again later!');
+                    })
+                    .always(function(){
+                        self.loading = false;
                     });
+                },
+                retrieveCommit: function(id) {
+                    var self = this;
+                    var currentCommit = self.getCommit(id);
+                    if (currentCommit) {
+                        self.message = currentCommit.message;
+                        self.components = currentCommit.components;
+                        self.machines = currentCommit.machines;
+                        self.repos = currentCommit.repos;
+                        self.note = currentCommit.note;
+                    } else {
+                        self.message = '';
+                        self.components = [];
+                        self.machines = [];
+                        self.repos = [];
+                        self.note = '';
+                    }
+                },
+                removeCommit: function() {
+                    var self = this;
+                    var id = self.currentIndex;
+                    var currentCommit = self.getCommit(id);
+                    var index = self.commits.indexOf(currentCommit);
+                    if (index == -1) return;
+
+                    self.loading = true;
+                    $.ajax({
+                        url: '/project/<%= project %>/commit/' + currentCommit.remote_id,
+                        type: 'DELETE'
+                    })
+                    .done(function(){
+                        // Do this after promise callback
+                        self.commits.splice(index, 1);
+                        self.message = '';
+                        self.components = [];
+                        self.machines = [];
+                        self.repos = [];
+                        self.note = '';
+                        $('#pr' + id).prop('checked', false);
+                        $('#pr' + id).prop('disabled', false);
+                        $('#li' + id).css("background-color", "white");
+                    })
+                    .fail(function(response){
+                        console.log(response.error);
+                        alert('Cannot connect to the server, please try again later!');
+                    })
+                    .always(function(){
+                        self.loading = false;
+                    });                    
+                },
+                pushCommits: function() {
+                    var self = this;
+
+                    self.loading = true;
+                    
+                    $('#pushButton').prop('disabled', true);
+                    $('#pushButton').button('loading');
+                    var ids = self.commits.map(function(item){ return item.remote_id; });
+                    
+                    $.ajax({
+                        url: '/project/<%= project %>/push',
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify( { commits: ids } )
+                    })
+                    .done(function(response){
+                        if (response.status == "OK") {
+                            commitLocalStorage.clear();
+                            $('#push-modal').modal('show');
+                        } else {
+                            console.log(response.error);
+                            alert('Cannot connect to the server, please try again later!');
+                        }
+                    })
+                    .fail(function(response) {
+                        console.log(response);
+                    })
+                    .always(function(){ self.loading = false; });
                 },
 
                 addComponent: function() {

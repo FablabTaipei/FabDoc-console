@@ -50,6 +50,10 @@ var _getImagePath = function(pid, cid, fname){
 	return pid + "/" + cid + "-" + fname;
 };
 
+var _getImageUrl = function(image){
+	return "https://firebasestorage.googleapis.com/v0/b/" + image.bucket + "/o/" + (image.encodeFilename || encodeURIComponent(image.filename) ) + "?alt=media&token=" + image.token;
+};
+
 // =====================================
 // For Add/Update commit ===============
 // =====================================
@@ -106,7 +110,11 @@ exports.addCommit = function(data){
 				resData.id = newCommitRef.key;
 
 				newCommitRef.set(resData)
-					.then(function(){ resolve(resData); })
+					.then(function(){ 
+						if(resData.image_data)
+							resData.imageUrls = resData.image_data.map(_getImageUrl);
+						resolve(resData);
+					})
 					.catch(function(err){ reject(err); });
 			});
 		})
@@ -138,11 +146,13 @@ exports.updateCommit = function(id, data){
 			.then(function(snapshot) {
 				if(snapshot.exists()){
 					// do update
-					projectCommitRef.update(toUpdate).then(function(){ resolve(); }, function(err){ reject(err); });
+					return projectCommitRef.update(toUpdate);
 				}else{
-					self.addCommit(data).then(function(result){ resolve(result); }, function(err){ reject(err); });
+					return self.addCommit(data);
 				}
-			}).catch(function(err){ reject(err); });
+			})
+			.then(function(result){ resolve(result); })
+			.catch(function(err){ reject(err); });
 	});
 };
 
@@ -243,7 +253,7 @@ exports.getCommits = function(project_id){
 							if(output.machines && typeof output.machines == 'string') output.machines = JSON.parse(output.machines);
 							if(output.repos && typeof output.repos == 'string') output.repos = JSON.parse(output.repos);
 
-							if(output.image_data) output.imageUrls = output.image_data.map(function(image){ return "https://firebasestorage.googleapis.com/v0/b/" + image.bucket + "/o/" + (image.encodeFilename || encodeURIComponent(image.filename) ) + "?alt=media&token=" + image.token });
+							if(output.image_data) output.imageUrls = output.image_data.map(_getImageUrl);
 
 							return output;
 						})
@@ -260,18 +270,20 @@ exports.removeCommit = function(project_id, commit_id){
 	var projectCommitRef = db.ref("project/" + project_id + "/commits/" + commit_id);
 
 	return new Promise(function(resolve, reject){
-		var removeImages = [];
+		var removeImages;
 		projectCommitRef.once("value")
 			.then(function(snapshot){
 				if(snapshot.exists()){
 					var data = snapshot.val();
-					if(data.image_data && typeof data.image_data == 'string') removeImages = JSON.parse(data.image_data);
+					if(removeImages = data.image_data){
+						if(typeof data.image_data == 'string') removeImages = JSON.parse(data.image_data);
+					}
 					return projectCommitRef.remove();
 				}else reject("The commit not found");
 			})
 			.then(function(){
 				return Promise.all((removeImages || []).map(function(perImg){
-					return self.removeImage( decodeURIComponent(perImg.encodeFilename) || perImg.filename );
+					return self.removeImage( perImg.encodeFilename? decodeURIComponent(perImg.encodeFilename) : perImg.filename );
 				}));
 			})
 			.then(function(res){ resolve(res); })
